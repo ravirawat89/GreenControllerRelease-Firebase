@@ -1,0 +1,705 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:context="com.netcommlabs.greencontroller.Fragments.FragDeviceMAP">
+
+    <ScrollView
+        android:layout_width="@dimen/_122sdp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/_4sdp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <RelativeLayout
+                android:layout_width="@dimen/_120sdp"
+                android:layout_height="@dimen/_40sdp"
+                android:layout_marginBottom="@dimen/_4sdp">
+
+                <LinearLayout
+                    android:layout_width="@dimen/_25sdp"
+                    android:layout_height="@dimen/_25sdp"
+                    android:layout_alignParentRight="true"
+                    android:background="@drawable/circle_notification">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="+"
+                        android:textSize="@dimen/_12sdp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/llAddNewAddress"
+                    android:layout_width="@dimen/_120sdp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_marginTop="@dimen/_3sdp"
+                    android:background="@drawable/device_bg"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="@dimen/_10sdp"
+                        android:text="New Address"
+                        android:textColor="@color/text_color_white"
+                        android:textSize="@dimen/_13sdp" />
+                </LinearLayout>
+            </RelativeLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/llIMWholeDesign"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_box"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/llHomeAddNewDvc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_7sdp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="@dimen/_50sdp"
+                android:layout_weight="1">
+
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="@dimen/_50sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:src="@drawable/home_icon_imap" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/ivMapNewDevice"
+                    android:layout_width="@dimen/_52sdp"
+                    android:layout_height="@dimen/_52sdp"
+                    android:src="@drawable/add_device_icon" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llNoDeviceIns"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No Device is installed on this address"
+                android:textSize="@dimen/_15sdp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llDvcTopContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <RelativeLayout
+                    android:id="@+id/rlBubbleLeftTop"
+                    android:layout_width="@dimen/_130sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:gravity="start"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/llBubbleLeftTopBG"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="@dimen/_8sdp"
+                        android:background="@drawable/round_back_shadow_small"
+                        android:gravity="center"
+                        android:padding="@dimen/_8sdp">
+
+                        <TextView
+                            android:id="@+id/tvDeviceNameTopLeft"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:text="Farm House Balcony"
+                            android:textColor="@color/text_color_white"
+                            android:textSize="@dimen/_11sdp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_alignParentRight="true"
+                        android:background="@drawable/circle_notification">
+
+                        <TextView
+                            android:id="@+id/tvValveCountTopLeft"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="1"
+                            android:textSize="@dimen/_11sdp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                </RelativeLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end">
+
+                <RelativeLayout
+                    android:id="@+id/rlBubbleRightTop"
+                    android:layout_width="@dimen/_130sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/llBubbleTopRightBG"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="@dimen/_8sdp"
+                        android:background="@drawable/round_back_shadow_small"
+                        android:gravity="center"
+                        android:padding="@dimen/_8sdp">
+
+                        <TextView
+                            android:id="@+id/tvDvcNameTopRigh"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="Farm House Balcony"
+                            android:textColor="@color/text_color_white"
+                            android:textSize="@dimen/_11sdp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_alignParentRight="true"
+                        android:background="@drawable/circle_notification">
+
+                        <TextView
+                            android:id="@+id/tvValveCountTopRight"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="1"
+                            android:textSize="@dimen/_11sdp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llDvcMiddleContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_2sdp"
+            android:gravity="center">
+
+            <RelativeLayout
+                android:id="@+id/rlBubbleMiddle"
+                android:layout_width="@dimen/_130sdp"
+                android:layout_height="@dimen/_50sdp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/llBubbleMiddleBG"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/_8sdp"
+                    android:background="@drawable/round_back_shadow_small"
+                    android:gravity="center"
+                    android:padding="@dimen/_8sdp">
+
+                    <TextView
+                        android:id="@+id/tvDvcNameMiddle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Farm House Balcony"
+                        android:textColor="@color/text_color_white"
+                        android:textSize="@dimen/_11sdp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="@dimen/_25sdp"
+                    android:layout_height="@dimen/_25sdp"
+                    android:layout_alignParentRight="true"
+                    android:background="@drawable/circle_notification">
+
+                    <TextView
+                        android:id="@+id/tvValveCountMiddle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="1"
+                        android:textSize="@dimen/_11sdp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llDvcBottomContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_2sdp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="start">
+
+                <RelativeLayout
+                    android:id="@+id/rlBubbleLeftBottom"
+                    android:layout_width="@dimen/_130sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/llBubbleLeftBottomBG"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="@dimen/_8sdp"
+                        android:background="@drawable/round_back_shadow_small"
+                        android:gravity="center"
+                        android:padding="@dimen/_8sdp">
+
+                        <TextView
+                            android:id="@+id/tvDvcNameLeftBottom"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="Farm House Balcony"
+                            android:textColor="@color/text_color_white"
+                            android:textSize="@dimen/_11sdp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_alignParentRight="true"
+                        android:background="@drawable/circle_notification">
+
+                        <TextView
+                            android:id="@+id/tvValveCountLeftBottom"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="1"
+                            android:textSize="@dimen/_11sdp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end">
+
+                <RelativeLayout
+                    android:id="@+id/rlBubbleRightBottom"
+                    android:layout_width="@dimen/_130sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/llBubbleRightBottomBG"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="@dimen/_8sdp"
+                        android:background="@drawable/round_back_shadow_small"
+                        android:gravity="center"
+                        android:padding="@dimen/_8sdp">
+
+                        <TextView
+                            android:id="@+id/tvDvcNameRightBottom"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="Farm House Balcony"
+                            android:textColor="@color/text_color_white"
+                            android:textSize="@dimen/_11sdp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_alignParentRight="true"
+                        android:background="@drawable/circle_notification">
+
+                        <TextView
+                            android:id="@+id/tvValveCountRightBottom"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="1"
+                            android:textSize="@dimen/_11sdp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llFooterIM"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/_5sdp"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:gravity="center"
+            android:padding="@dimen/_4sdp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/ivPrev"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_marginEnd="@dimen/_5sdp"
+                android:padding="@dimen/_2sdp"
+                android:src="@drawable/pre" />
+
+            <ImageView
+                android:id="@+id/ivNext"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_marginStart="@dimen/_10sdp"
+                android:padding="@dimen/_2sdp"
+                android:src="@drawable/next" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llDialogLongPressDvc"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="@dimen/_300sdp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="@dimen/_10sdp"
+                android:layout_marginRight="@dimen/_10sdp"
+                android:background="@color/text_color_white"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_35sdp"
+
+                    android:background="@color/lighter_gray"
+                    android:padding="@dimen/_5sdp">
+
+                    <TextView
+                        android:id="@+id/textView14"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/_10sdp"
+                        android:paddingLeft="@dimen/_10sdp"
+                        android:paddingTop="@dimen/_3sdp"
+                        android:text="Device Options"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/_15sdp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvEditDvcName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_10sdp"
+                    android:text="Edit Name"
+                    android:textColor="@android:color/black" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1sdp"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:layout_marginRight="@dimen/_10sdp"
+                    android:background="#1A000000" />
+
+                <TextView
+                    android:id="@+id/tvPauseDvc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_10sdp"
+                    android:text="Pause"
+                    android:textColor="@android:color/black" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1sdp"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:layout_marginRight="@dimen/_10sdp"
+                    android:background="#1A000000" />
+
+                <TextView
+                    android:id="@+id/tvResumeDbc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_10sdp"
+                    android:text="Resume"
+                    android:textColor="@android:color/black" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1sdp"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:layout_marginRight="@dimen/_10sdp"
+                    android:background="#1A000000" />
+
+                <TextView
+                    android:id="@+id/tvConnectDvc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_10sdp"
+                    android:text="Connect"
+                    android:textColor="@android:color/black" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1sdp"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:layout_marginRight="@dimen/_10sdp"
+                    android:background="#1A000000" />
+
+                <TextView
+                    android:id="@+id/tvDisconnectDvc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_10sdp"
+                    android:text="Disconnect"
+                    android:textColor="@android:color/black" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1sdp"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:layout_marginRight="@dimen/_10sdp"
+                    android:background="#1A000000" />
+
+                <TextView
+                    android:id="@+id/tvDeleteDvc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_10sdp"
+                    android:text="Delete"
+                    android:textColor="@android:color/black" />
+
+
+                <!--     <LinearLayout
+                         android:layout_width="match_parent"
+                         android:layout_height="@dimen/_40sdp"
+                         android:layout_marginTop="@dimen/_10sdp"
+                         android:background="@color/text_color_white"
+                         android:gravity="center"
+                         android:orientation="horizontal"
+                         android:weightSum="1">
+
+                         <TextView
+                             android:id="@+id/tv_submit_change_password"
+                             android:layout_width="0dp"
+                             android:layout_height="match_parent"
+                             android:layout_marginTop="@dimen/_3sdp"
+                             android:layout_weight=".5"
+                             android:background="#0B9F7F"
+                             android:gravity="center"
+                             android:text="SUBMIT"
+                             android:textColor="@color/text_color_white"
+                             android:textSize="@dimen/_15sdp" />
+
+                         <View
+                             android:layout_width="1dp"
+                             android:layout_height="wrap_content"
+                             android:layout_marginTop="@dimen/_3sdp"
+                             android:background="#73C59F"></View>
+
+                         <TextView
+                             android:id="@+id/tv_cancel"
+                             android:layout_width="0dp"
+                             android:layout_height="match_parent"
+                             android:layout_marginTop="@dimen/_3sdp"
+                             android:layout_weight=".5"
+                             android:background="#0B9F7F"
+                             android:gravity="center"
+                             android:text="CANCEL"
+                             android:textColor="@color/text_color_white"
+                             android:textSize="@dimen/_15sdp" />
+                     </LinearLayout>-->
+            </LinearLayout>
+
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llDialogEditDvcName"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="@dimen/_300sdp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="@dimen/_10sdp"
+            android:layout_marginRight="@dimen/_10sdp"
+            android:background="@color/text_color_white"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_35sdp"
+                android:background="@color/lighter_gray"
+                android:padding="@dimen/_5sdp">
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:paddingLeft="@dimen/_10sdp"
+                    android:paddingTop="@dimen/_3sdp"
+                    android:text="Edit Device Name"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/_15sdp" />
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/etEditDvcName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:background="@android:color/transparent"
+                android:cursorVisible="true"
+                android:focusable="true"
+                android:hint="Enter device name"
+                android:imeOptions="flagNoExtractUi"
+                android:inputType="text"
+                android:padding="@dimen/_10sdp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/text_color_gray"
+                android:textSize="@dimen/_13sdp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_1sdp"
+                android:layout_marginLeft="@dimen/_10sdp"
+                android:layout_marginRight="@dimen/_10sdp"
+                android:background="#1A000000" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_40sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:background="@color/text_color_white"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:weightSum="1">
+
+                <TextView
+                    android:id="@+id/tvSaveEditBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/_3sdp"
+                    android:layout_weight=".5"
+                    android:background="#0B9F7F"
+                    android:gravity="center"
+                    android:text="SAVE"
+                    android:textColor="@color/text_color_white"
+                    android:textSize="@dimen/_15sdp" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_3sdp"
+                    android:background="#73C59F" />
+
+                <TextView
+                    android:id="@+id/tvCancelEdit"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/_3sdp"
+                    android:layout_weight=".5"
+                    android:background="#0B9F7F"
+                    android:gravity="center"
+                    android:text="CANCEL"
+                    android:textColor="@color/text_color_white"
+                    android:textSize="@dimen/_15sdp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <!--<include
+        layout="@layout/dialog_dvc_long_press"
+        />-->
+
+</LinearLayout>

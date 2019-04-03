@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#E1E1E1">
+
+   <!-- &lt;!&ndash; mask here... &ndash;&gt;
+    <item andrdvcIdd:id="@andrdvcIdd:id/mask">
+        <color android:color="@color/black"/> &lt;!&ndash; any color will do &ndash;&gt;
+    </item>
+
+    <item>
+        <selector>
+            &lt;!&ndash; ... NOT here. &ndash;&gt;
+            <item android:state_selected="true">
+                <color android:color="@color/blue"/>
+            </item>
+
+            <item android:state_activated="true">
+                <color android:color="@color/red"/>
+            </item>
+
+            <item>
+                <color android:color="@color/transparent"/>
+            </item>
+        </selector>
+    </item>-->
+</ripple>

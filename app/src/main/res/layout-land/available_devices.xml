@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="@dimen/_8sdp"
+    android:layout_marginRight="@dimen/_8sdp"
+    android:orientation="vertical"
+    tools:context="com.netcommlabs.greencontroller.activities.AvailableDevices">
+
+  <!--  <LinearLayout
+        andrdvcIdd:iddvcId@+id/llScrnHeader"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="@dimen/_20sdp"
+            android:layout_height="wrap_content"
+            android:src="@drawable/back_arrow_circle" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/_5sdp"
+            android:text="Add New Device"
+            android:textSize="@dimen/header_title_size" />
+    </LinearLayout>-->
+
+    <TextView
+        android:id="@+id/tvAvailableDvcs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/_10sdp"
+        android:layout_marginTop="@dimen/_5sdp"
+        android:text="AVAILABLE DEVICES"
+        android:textColor="@color/text_color_pale"
+        android:textSize="@dimen/_13sdp" />
+
+    <ProgressBar
+        android:id="@+id/progrsBarIndetmnt"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_4sdp"
+        android:indeterminate="true"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/reViListAvailDvc"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:id="@+id/llNoDevice"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_15sdp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/_55sdp"
+                android:layout_height="@dimen/_55sdp"
+                android:src="@drawable/no_device" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:gravity="center"
+                android:text="No device found"
+                android:textSize="@dimen/_16sdp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_5sdp"
+                android:text="Don't find your device, its bluetooth might be off, turn it on and"
+                android:textSize="@dimen/_15sdp" />
+
+            <TextView
+                android:id="@+id/tvScanAgainEvent"
+                android:layout_width="@dimen/_135sdp"
+                android:layout_height="@dimen/_45sdp"
+                android:background="@drawable/rounded_shadow_background_light"
+                android:gravity="center"
+                android:text="SCAN AGAIN"
+                android:textSize="@dimen/_13sdp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.netcommlabs.greencontroller">
+
+    <uses-permission android:name="android.permission.BLUETOOTH"  />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.Manifest.permission.READ_PHONE_STATE" />
+
+    <application
+        android:name="com.netcommlabs.greencontroller.utilities.AppController"
+        android:allowBackup="false"
+        android:icon="@mipmap/app_icon"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/app_icon_round"
+        android:supportsRtl="true"
+        android:theme="@style/FullScreen"
+        tools:replace="allowBackup">
+
+        <activity
+            android:name=".activities.MainActivity"
+            android:configChanges="orientation|screenSize|keyboard"
+            android:screenOrientation="landscape">
+
+
+        </activity>
+        <activity
+            android:name=".activities.SplashActivity"
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".activities.LoginAct"
+            android:screenOrientation="landscape">
+
+        </activity>
+        <activity
+            android:name=".activities.AddAddressActivity"
+            android:screenOrientation="landscape"></activity>
+        <activity
+            android:name=".activities.RegistraionActivity"
+            android:screenOrientation="landscape"></activity>
+        <!-- &lt;!&ndash; Place Autocomplete API KEY &ndash;&gt;
+         <meta-data
+             android:name="com.google.android.geo.API_KEY"
+             android:value="AIzaSyAT07iMTojOo07HN4A6UMnbjZ-rAqlqGkg" />-->
+        <!--API key for MAP-->
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDfEdnQqqjJyF4shdLvmIiSRRVvEhICNTo" />
+
+
+        <activity android:name=".BTClientActivity" />
+        <activity
+            android:name=".activities.DialogActivity"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".activities.PlaceACTandMap"
+            android:screenOrientation="landscape">
+
+        </activity>
+        <activity
+            android:name=".activities.ActvityCheckRegisteredMobileNo"
+            android:screenOrientation="landscape"></activity>
+
+        <activity android:name=".activities.PeripheralControlActivity" />
+        <activity
+            android:name=".activities.ActivityForgotPass"
+            android:screenOrientation="landscape"></activity>
+
+        <service
+            android:name=".services.BleAdapterService"
+            android:enabled="true" />
+
+        <activity
+            android:name=".activities.ActvityOtp"
+            android:screenOrientation="landscape"></activity>
+    </application>
+
+</manifest>

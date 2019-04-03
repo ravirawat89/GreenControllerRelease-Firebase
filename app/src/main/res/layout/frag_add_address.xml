@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="@dimen/_5sdp"
+    android:layout_marginLeft="@dimen/_5sdp"
+    android:layout_marginRight="@dimen/_5sdp"
+    tools:context="com.netcommlabs.greencontroller.activities.AddAddressActivity">
+
+    <!--Add Address design implementation-->
+    <ScrollView
+        android:id="@+id/AddAddressLayoutScrlV"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/llScrnHeader">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/_10sdp"
+                android:layout_marginRight="@dimen/_10sdp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_65sdp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rect_shadow_all_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:src="@drawable/flat_number" />
+
+                    <EditText
+                        android:id="@+id/tvFlatNum"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:cursorVisible="false"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="Flat No. / Building Name"
+                        android:imeOptions="flagNoExtractUi"
+                        android:inputType="textPersonName"
+                        android:paddingLeft="@dimen/_5sdp"
+                        android:textSize="@dimen/_13sdp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_65sdp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rect_shadow_all_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginLeft="@dimen/_10sdp"
+                        android:src="@drawable/street" />
+
+                    <EditText
+                        android:id="@+id/tvStreetArea"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:cursorVisible="false"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="Street / Area"
+                        android:imeOptions="flagNoExtractUi"
+                        android:inputType="textPersonName"
+                        android:paddingLeft="@dimen/_5sdp"
+                        android:textSize="@dimen/_13sdp" />
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/_10sdp"
+                android:layout_marginRight="@dimen/_10sdp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/llLocalityLandmark"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_65sdp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rect_shadow_all_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:src="@drawable/locality" />
+
+                    <EditText
+                        android:id="@+id/tvLocalityLandmark"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:cursorVisible="false"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="Locality / Landmark"
+                        android:imeOptions="flagNoExtractUi"
+                        android:paddingLeft="@dimen/_5sdp"
+                        android:paddingRight="@dimen/_15sdp"
+                        android:singleLine="true"
+                        android:textSize="@dimen/_13sdp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_65sdp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rect_shadow_all_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginLeft="@dimen/_10sdp"
+                        android:src="@drawable/pincode" />
+
+                    <EditText
+                        android:id="@+id/tvPincode"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:cursorVisible="false"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="Pin code"
+                        android:imeOptions="flagNoExtractUi"
+                        android:inputType="number"
+                        android:maxLength="6"
+                        android:paddingLeft="@dimen/_5sdp"
+                        android:textSize="@dimen/_13sdp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/_10sdp"
+                android:layout_marginRight="@dimen/_10sdp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_65sdp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rect_shadow_all_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginLeft="@dimen/_10sdp"
+                        android:src="@drawable/city" />
+
+                    <EditText
+                        android:id="@+id/tvCity"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:cursorVisible="false"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="City"
+                        android:imeOptions="flagNoExtractUi"
+                        android:inputType="textPersonName"
+                        android:paddingLeft="@dimen/_5sdp"
+                        android:textSize="@dimen/_13sdp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_65sdp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rect_shadow_all_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:src="@drawable/state" />
+
+                    <EditText
+                        android:id="@+id/tvState"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:cursorVisible="false"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="State"
+                        android:imeOptions="flagNoExtractUi"
+                        android:inputType="textPersonName"
+                        android:paddingLeft="@dimen/_5sdp"
+                        android:textSize="@dimen/_13sdp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llAddAddressName"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_105sdp"
+                android:layout_marginBottom="@dimen/_5sdp"
+                android:layout_marginLeft="@dimen/_5sdp"
+                android:layout_marginRight="@dimen/_5sdp"
+                android:background="@drawable/rect_shadow_all_bg"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/_20sdp"
+                    android:layout_marginRight="@dimen/_20sdp"
+                    android:layout_marginTop="@dimen/_20sdp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/_1sdp"
+                        android:layout_weight=".2"
+                        android:background="#3D9D97" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:gravity="center"
+                        android:text="Address Name"
+                        android:textSize="@dimen/_13sdp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/_1sdp"
+                        android:layout_weight="7.8"
+                        android:background="#3D9D97" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/_20sdp"
+                    android:layout_marginRight="@dimen/_20sdp"
+                    android:layout_marginTop="@dimen/_15sdp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <RadioGroup
+                        android:id="@+id/raGrAddressType"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/raBtnHome"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Home"
+                            android:textSize="@dimen/_14sdp" />
+
+                        <RadioButton
+                            android:id="@+id/raBtnOffice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/_30sdp"
+                            android:text="Office"
+                            android:textSize="@dimen/_14sdp" />
+
+                        <RadioButton
+                            android:id="@+id/raBtnOther"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/_30sdp"
+                            android:text="Other"
+                            android:textSize="@dimen/_14sdp" />
+
+                    </RadioGroup>
+
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/etOtherAddName"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_38sdp"
+                    android:layout_marginLeft="@dimen/_25sdp"
+                    android:layout_marginRight="@dimen/_25sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/rect_border_light_line"
+                    android:hint="Enter other address name"
+                    android:imeOptions="flagNoExtractUi"
+                    android:inputType="textCapSentences"
+                    android:paddingLeft="@dimen/_10sdp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvNextEvent"
+                    android:layout_width="@dimen/_130sdp"
+                    android:layout_height="@dimen/_45sdp"
+                    android:background="@drawable/round_back_shadow_small"
+                    android:gravity="center"
+                    android:text="SAVE"
+                    android:textSize="@dimen/_15sdp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!--Search with MAP with OK button-->
+    <LinearLayout
+        android:id="@+id/llSearchMAPok"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <fragment
+            android:id="@+id/map"
+            class="com.google.android.gms.maps.MapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/_3sdp"
+            android:layout_marginBottom="@dimen/_4sdp"
+            android:layout_marginLeft="@dimen/_4sdp"
+            android:layout_marginRight="@dimen/_4sdp" />
+
+
+    </LinearLayout>
+
+</RelativeLayout>

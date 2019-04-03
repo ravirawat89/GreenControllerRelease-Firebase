@@ -1,0 +1,9 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+
+    <!--Add watering profile dimensions-->
+    <dimen name="headings">@dimen/_12sdp</dimen>
+    <dimen name="icon_size">@dimen/_22sdp</dimen>
+    <dimen name="hint_size">@dimen/_11sdp</dimen>
+    <dimen name="header_title_size">@dimen/_15sdp</dimen>
+</resources>

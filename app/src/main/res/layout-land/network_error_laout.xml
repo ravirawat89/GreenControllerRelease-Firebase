@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="@dimen/_300sdp"
+        android:layout_height="wrap_content"
+       android:layout_marginBottom="@dimen/_30sdp"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="@dimen/_70sdp"
+            android:layout_height="@dimen/_70sdp"
+            android:background="@drawable/error_icon_two" />
+
+        <TextView
+            android:id="@+id/tvErrorTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Error!"
+            android:textColor="@color/text_color_white"
+            android:textSize="@dimen/_20sdp" />
+
+        <TextView
+            android:id="@+id/error_msg"
+            android:padding="@dimen/_5sdp"
+            android:layout_width="@dimen/_300sdp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_19sdp"
+            android:gravity="center"
+            android:text="gfdgdfgddfgdfgdfsgfgsdfdfgdf ggfdg dfg gfdgdfgfdgdf g gdfg gdgd gdgd g  gdfgdfg dg  gdg dgg  gdfg  gsdfgdfjhgsdf"
+            android:textColor="@color/text_color_white"
+            android:textSize="@dimen/_12sdp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_exit"
+                android:layout_width="@dimen/_100sdp"
+                android:layout_height="@dimen/_45sdp"
+                android:background="@drawable/round_back_shadow_small"
+                android:gravity="center"
+                android:text="Exit"
+                android:textAllCaps="true"
+                android:textSize="@dimen/_13sdp" />
+
+
+            <TextView
+                android:id="@+id/tv_retry"
+                android:layout_width="@dimen/_100sdp"
+                android:layout_height="@dimen/_45sdp"
+                android:background="@drawable/round_back_shadow_small"
+                android:gravity="center"
+                android:text="RETRY"
+                android:textAllCaps="true"
+                android:textSize="@dimen/_13sdp" />
+        </LinearLayout>
+    </LinearLayout>
+
+
+</RelativeLayout>
