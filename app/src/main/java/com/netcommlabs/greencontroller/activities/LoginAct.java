@@ -1,9 +1,11 @@
 package com.netcommlabs.greencontroller.activities;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
@@ -12,6 +14,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
@@ -41,6 +48,9 @@ public class LoginAct extends AppCompatActivity implements View.OnClickListener,
     private ProjectWebRequest request;
     private DatabaseHandler databaseHandler;
 
+    private FirebaseAuth firebaseAuth;             // Test: Firebase integration
+    private ProgressDialog progressDialog;          // Test: Firebase integration
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +64,9 @@ public class LoginAct extends AppCompatActivity implements View.OnClickListener,
         /*if (!NetworkUtils.isConnected(mContext)) {
             Toast.makeText(mContext, "Please check your net connection", Toast.LENGTH_SHORT).show();
         }*/
+        //initializing firebase auth object
+        firebaseAuth = FirebaseAuth.getInstance();                  // Test: Firebase integration
+
         etPhoneEmail = (EditText) findViewById(R.id.etPhoneEmail);
         etPassword = (EditText) findViewById(R.id.etPassword);
         tvForgtPassEvent = (TextView) findViewById(R.id.tvForgtPassEvent);
@@ -97,6 +110,9 @@ public class LoginAct extends AppCompatActivity implements View.OnClickListener,
             return;
         }*/
 
+        String email = etPhoneEmail.getText().toString().trim();
+        String password  = etPassword.getText().toString().trim();
+
         if (etPhoneEmail.getText().toString().trim().length() <= 0 || etPhoneEmail.getText().toString().trim().length() <= 0) {
             Toast.makeText(this, "Please Enter Email Address or Mobile no", Toast.LENGTH_SHORT).show();
             return;
@@ -106,7 +122,42 @@ public class LoginAct extends AppCompatActivity implements View.OnClickListener,
             Toast.makeText(this, "Please Enter password", Toast.LENGTH_SHORT).show();
             return;
         }
-        hitApi();
+        //hitApi();
+
+
+        //*****************************************Test: Firebase integration****************************************************//
+        if(firebaseAuth.getCurrentUser() != null)
+        {
+            //that means user is already logged in
+            hitApi();
+            Toast.makeText(this, "Already signed in..", Toast.LENGTH_SHORT).show();
+        }
+        else {
+
+            firebaseAuth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                // Sign in success, update UI with the signed-in user's information
+                                FirebaseUser user = firebaseAuth.getCurrentUser();
+                                Toast.makeText(LoginAct.this, user + " signedIn successfully", Toast.LENGTH_SHORT).show();
+                                hitApi();
+
+                            }
+                            else
+                            {
+                                // If sign in fails, display a message to the user.
+                                Toast.makeText(LoginAct.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                            }
+
+                            // ...
+                        }
+                    });
+
+        }
+        //******************************************************************************************************************
+
     }
 
     private void hitApi() {

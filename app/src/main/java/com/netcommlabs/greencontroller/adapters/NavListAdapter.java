@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.netcommlabs.greencontroller.Fragments.FragAddressBook;
 import com.netcommlabs.greencontroller.Fragments.FragAvailableDevices;
 import com.netcommlabs.greencontroller.Fragments.FragDeviceMAP;
@@ -43,6 +44,8 @@ public class NavListAdapter extends RecyclerView.Adapter<NavListAdapter.MyViewHo
     private DatabaseHandler databaseHandler;
     private LinearLayout llAddNewAddress;
     OpendialogCallback opendialogCallback;
+
+    private FirebaseAuth firebaseAuth;              // Test: Firebase integration
 
     public NavListAdapter(MainActivity mContext, List<Navigation_Drawer_Data> listNavDrawerRowDat, DrawerLayout nav_drawer_layout, OpendialogCallback opendialogCallback) {
         this.mContext = mContext;
@@ -119,6 +122,10 @@ public class NavListAdapter extends RecyclerView.Adapter<NavListAdapter.MyViewHo
                         case "Log out":
                             databaseHandler = DatabaseHandler.getInstance(mContext);
                             mContext.isLogoutTrue = true;
+
+                            //initializing firebase authentication object
+                            firebaseAuth = FirebaseAuth.getInstance();           // Test: Firebase integration
+                            firebaseAuth.signOut();                             // Test: Firebase integration
 
                             if (databaseHandler.getDvcMasterOpTypeCount() > 0) {
                                 mContext.syncUnsyncDataClearAllAndLogout();

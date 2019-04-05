@@ -2,8 +2,10 @@ package com.netcommlabs.greencontroller.activities;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -12,6 +14,11 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
@@ -43,11 +50,17 @@ public class RegistraionActivity extends Activity implements View.OnClickListene
     private EditText et_otp_value;
     private RadioButton raBtnHome;
     private boolean isCheckedInstance;
+    private FirebaseAuth firebaseAuth;             // Test: Firebase integration
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.actvity_registration);
+
+        //initializing firebase auth object
+        firebaseAuth = FirebaseAuth.getInstance();
+
         initView();
     }
 
@@ -90,7 +103,12 @@ public class RegistraionActivity extends Activity implements View.OnClickListene
 
     }
 
-    private void validation() {
+    private void validation()
+    {
+
+        String email = edtEmail.getText().toString().trim();
+        String password  = edtPass.getText().toString().trim();
+
         if (edtName.getText().toString().trim().length() <= 0) {
             Toast.makeText(this, "Please enter User Name", Toast.LENGTH_SHORT).show();
             return;
@@ -139,7 +157,30 @@ public class RegistraionActivity extends Activity implements View.OnClickListene
             return;
         }
 
-        hitApiForRegistration();
+        // progressDialog.setMessage("Registering Please Wait...");      // Test: Firebase integration
+        //progressDialog.show();
+
+        //creating a new user
+        firebaseAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {                      // Test: Firebase integration
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        //checking if success
+                        if(task.isSuccessful()){
+                            //display some message here
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
+                            Toast.makeText(RegistraionActivity.this, "Successfully registered as "+ user,Toast.LENGTH_LONG).show();
+
+                            hitApiForRegistration();
+                        }else{
+                            //display some message here
+                            Toast.makeText(RegistraionActivity.this,"Registration Error",Toast.LENGTH_LONG).show();
+                        }
+                        // progressDialog.dismiss();
+                    }
+                });
+
+        // hitApiForRegistration();
     }
 
     private void hitApiForRegistration() {
