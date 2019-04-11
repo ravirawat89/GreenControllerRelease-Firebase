@@ -201,7 +201,7 @@ public class FragDeviceDetails extends Fragment {
         if (bleAppLevel != null && bleAppLevel.getBLEConnectedOrNot() && (bleAppLevel.getDvcAddress().equals(dvcMacAdd)))
         {
             tvDesc_txt.setText("This device is Connected");
-            if(deviceAddr.equals(dvcMacAdd))                                 //if(device == 3): Check if connected device is Tubby i.e 3, to display weight otherwise invisible weight textview
+            if(dvcMacAdd.equals(deviceAddr))                                 //if(device == 3): Check if connected device is Tubby i.e 3, to display weight otherwise invisible weight textview
             {
                 weight_display.setVisibility(View.VISIBLE);
                 if (weight > 0 && weight <= 10500)

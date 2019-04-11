@@ -126,7 +126,7 @@ public class LoginAct extends AppCompatActivity implements View.OnClickListener,
 
 
         //*****************************************Test: Firebase integration****************************************************//
-        if(firebaseAuth.getCurrentUser() != null)
+        if(FirebaseAuth.getInstance().getCurrentUser() != null)
         {
             //that means user is already logged in
             hitApi();
