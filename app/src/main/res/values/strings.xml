@@ -10,5 +10,6 @@
         <item>Delete</item>
     </string-array>
     <string name="str_term_policy">I agree to the <b>Terms of Use</b> and <b> Privacy Policy</b></string>
+    <string name="web_client_id">938028384418-sne1sq9t7k2v6kr1lcs8d51t03hv6rgn.apps.googleusercontent.com</string>
 </resources>
 

@@ -28,8 +28,11 @@ public class SplashActivity extends Activity {
                 @Override
                 public void run() {
 
-                    PreferenceModel model = MySharedPreference.getInstance(SplashActivity.this).getsharedPreferenceData();
-                    if (model.getUser_id() != null && model.getUser_id().length() > 0) {
+                    //PreferenceModel model = MySharedPreference.getInstance(SplashActivity.this).getsharedPreferenceData();
+                    String userid = MySharedPreference.getInstance(SplashActivity.this).getStringData("UserID");
+                   // if (model.getUser_id() != null && model.getUser_id().length() > 0) {
+                    if (userid != null)
+                    {
                         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);

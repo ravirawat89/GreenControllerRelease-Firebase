@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -20,6 +21,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
@@ -63,7 +70,6 @@ public class ActvityOtp extends Activity implements View.OnClickListener, APIRes
 
         init();
     }
-
 
     private void init() {
         userId = getIntent().getStringExtra("userId");
@@ -124,6 +130,7 @@ public class ActvityOtp extends Activity implements View.OnClickListener, APIRes
                                     hitApiForgotPass();//Forgot password
                                 } else {
                                     hitApiforRegistrationOTP();//Registration confirm
+
                                 }
 
                                 //  }
@@ -236,6 +243,7 @@ public class ActvityOtp extends Activity implements View.OnClickListener, APIRes
                     hitApiForgotPass();
                 } else {
                     hitApiforRegistrationOTP();
+
                 }
 
 
@@ -348,13 +356,38 @@ public class ActvityOtp extends Activity implements View.OnClickListener, APIRes
         }
     }
 
-
     @Override
     public void onSuccess(JSONObject object, int Tag) {
         if (Tag == UrlConstants.OTP_TAG) {
             if (object.optString("status").equals("success")) {
                 PreferenceModel model = new Gson().fromJson(object.toString(), PreferenceModel.class);
                 MySharedPreference.getInstance(this).setUserDetail(model);
+
+            //*************************** Save mobile number to database*******************************************************
+                // Write a message to the database
+               FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if(user != null)
+                {
+                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    DatabaseReference myRef = database.getReference("User");
+                    myRef.child(user.getUid()).child("Phone").setValue(mobileNo)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    // Write was successful!
+                                    Toast.makeText(ActvityOtp.this, "write successful.", Toast.LENGTH_SHORT).show();
+                                    // ...
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Write failed
+                                    Toast.makeText(ActvityOtp.this, "write failed!!", Toast.LENGTH_SHORT).show();
+                                    // ...
+                                }
+                            });
+                }
 
                 Intent i = new Intent(ActvityOtp.this, MainActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

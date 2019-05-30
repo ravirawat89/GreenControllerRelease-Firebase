@@ -16,7 +16,7 @@
         <ImageView
             android:id="@+id/ivNavIcon"
             android:layout_width="@dimen/_23sdp"
-            android:layout_height="@dimen/_23sdp"
+            android:layout_height="24dp"
             android:background="@android:color/transparent"
             android:src="@drawable/my_profile" />
 

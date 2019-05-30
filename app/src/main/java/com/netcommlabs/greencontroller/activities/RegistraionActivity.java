@@ -15,10 +15,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
@@ -160,27 +164,72 @@ public class RegistraionActivity extends Activity implements View.OnClickListene
         // progressDialog.setMessage("Registering Please Wait...");      // Test: Firebase integration
         //progressDialog.show();
 
-        //creating a new user
-        firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {                      // Test: Firebase integration
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        //checking if success
-                        if(task.isSuccessful()){
-                            //display some message here
-                            FirebaseUser user = firebaseAuth.getCurrentUser();
-                            Toast.makeText(RegistraionActivity.this, "Successfully registered as "+ user,Toast.LENGTH_LONG).show();
+        //*****************************************Test: Firebase integration****************************************************//
+        if(FirebaseAuth.getInstance().getCurrentUser() != null)
+        {
+            Toast.makeText(this, "Already signed in..", Toast.LENGTH_SHORT).show();
+        }
+        else {
 
-                            hitApiForRegistration();
-                        }else{
-                            //display some message here
-                            Toast.makeText(RegistraionActivity.this,"Registration Error",Toast.LENGTH_LONG).show();
+            //creating a new user
+            firebaseAuth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {                      // Test: Firebase integration
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            //checking if success
+                            if (task.isSuccessful()) {
+                                //display some message here
+                                FirebaseUser user = firebaseAuth.getCurrentUser();
+                                Toast.makeText(RegistraionActivity.this, "Successfully registered as " + user, Toast.LENGTH_LONG).show();
+
+                                //hitApiForRegistration();
+                                //*************************** Save mobile number to database*******************************************************
+                                // Write a message to the database
+                                //FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                               if(user != null)
+                                {
+                                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                                    DatabaseReference myRef = database.getReference("User");
+                                    myRef.child(user.getUid()).child("username").setValue(edtName.getText().toString().trim());
+                                    myRef.child(user.getUid()).child("email ID").setValue(edtEmail.getText().toString().trim());
+                                    myRef.child(user.getUid()).child("password").setValue(edtPass.getText().toString().trim())
+                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid)
+                                    {
+                                        // Write was successful!
+                                        Toast.makeText(RegistraionActivity.this, "write successful.", Toast.LENGTH_SHORT).show();
+                                        // ...
+                                        }
+                                    })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                // Write failed
+                                                Toast.makeText(RegistraionActivity.this, "write failed!!", Toast.LENGTH_SHORT).show();
+                                                // ...
+                                            }
+                                        });
+                                }
+
+                                /*Intent i = new Intent(RegistraionActivity.this, ActvityOtp.class);
+                                //i.putExtra("userId", userIdForOtp);
+                                i.putExtra("userId", user.getUid());
+                                i.putExtra(KEY_LANDED_FROM, "");
+                                i.putExtra(KEY_MOBILE_NUM, edtPhoneNo.getText().toString());
+
+                                startActivity(i);
+                                finish();*/
+                            } else {
+                                //display some message here
+                                Toast.makeText(RegistraionActivity.this, "Registration Error", Toast.LENGTH_LONG).show();
+                            }
+                            // progressDialog.dismiss();
                         }
-                        // progressDialog.dismiss();
-                    }
-                });
+                    });
 
-        // hitApiForRegistration();
+            hitApiForRegistration();
+        }
     }
 
     private void hitApiForRegistration() {

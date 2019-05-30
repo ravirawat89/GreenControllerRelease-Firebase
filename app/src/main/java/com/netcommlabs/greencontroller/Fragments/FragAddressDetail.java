@@ -17,6 +17,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
@@ -185,13 +189,29 @@ public class FragAddressDetail extends Fragment implements APIResponseListener {
     }
 
     private void hitApiforDeleteAdd() {
-        try {
+       /* try {
             request = new ProjectWebRequest(mContext, getParam(), UrlConstants.ADD_ADDRESS, this, UrlConstants.ADD_ADDRESS_TAG);
             request.execute();
         } catch (Exception e) {
             clearRef();
             e.printStackTrace();
-        }
+        }*/
+        //************************************ Firebase update address***************************************************************************************//
+        /*FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if(user != null)
+        {
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference("User");
+            myRef.child(user.getUid()).child(modalAddressModule.getAddressUUID()).child("User Address").removeValue();
+            databaseHandler.deleteUpdateAddress(addressUUID);
+            //databaseHandler.deleteUpdateDevice(addressUUID);
+            mContext.onBackPressed();
+        }*/
+        // Address deleted successfully response
+        Toast.makeText(mContext, "Address deleted successfully" , Toast.LENGTH_SHORT).show();
+        databaseHandler.deleteUpdateAddress(addressUUID);
+        //databaseHandler.deleteUpdateDevice(addressUUID);
+        mContext.onBackPressed();
     }
 
     private void clearRef() {

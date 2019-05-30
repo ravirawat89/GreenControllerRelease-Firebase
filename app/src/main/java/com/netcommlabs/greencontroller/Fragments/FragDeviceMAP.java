@@ -139,11 +139,13 @@ public class FragDeviceMAP extends Fragment implements View.OnClickListener, Vie
         llDvcBottomContainer = view.findViewById(R.id.llDvcBottomContainer);
     }
 
-    private void initBase() {
+    private void initBase()
+    {
         bleAppLevel = BLEAppLevel.getInstanceOnly();
         databaseHandler = DatabaseHandler.getInstance(mContext);
         listModalAddressModule = databaseHandler.getAlladdressUUIDRadioNameSelectStatus();
-        if (listModalAddressModule.size() > 0) {
+        if (listModalAddressModule.size() > 0)
+        {
             for (int i = 0; i < listModalAddressModule.size(); i++) {
                 if (listModalAddressModule.get(i).getAddressSelectStatus() == 1) {
                     addressUUID = listModalAddressModule.get(i).getAddressUUID();
@@ -347,7 +349,7 @@ public class FragDeviceMAP extends Fragment implements View.OnClickListener, Vie
             llNoDeviceIns.setVisibility(View.GONE);
 
             for (int i = 0; i < listModalDeviceModule.size(); i++) {
-                if (i == 0) {                                               //error: if (rlBubbleLeftTop.getVisibility() == View.GONE && i == 0)
+                if (i == 0) {                                               //error: if(rlBubbleLeftTop.getVisibility() == View.GONE && i == 0)
                     dvcName = listModalDeviceModule.get(i).getName();
                     valveNum = listModalDeviceModule.get(i).getValvesNum();
                     dvcMac = listModalDeviceModule.get(i).getDvcMacAddress();
@@ -753,8 +755,8 @@ public class FragDeviceMAP extends Fragment implements View.OnClickListener, Vie
                 llBubbleMiddleBG.setBackgroundResource(R.drawable.round_back_shadow_small);
                 break;
             case R.id.rlBubbleLeftBottom:
-                llBubbleLeftBottomBG.setBackgroundResource(R.drawable.round_back_shadow_small);
-                break;
+                 llBubbleLeftBottomBG.setBackgroundResource(R.drawable.round_back_shadow_small);
+                 break;
             case R.id.rlBubbleRightBottom:
                 llBubbleRightBottomBG.setBackgroundResource(R.drawable.round_back_shadow_small);
                 break;

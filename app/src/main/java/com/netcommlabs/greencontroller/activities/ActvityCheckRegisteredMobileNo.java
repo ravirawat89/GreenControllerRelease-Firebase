@@ -2,21 +2,39 @@ package com.netcommlabs.greencontroller.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.FirebaseTooManyRequestsException;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.PhoneAuthCredential;
+import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
 import com.netcommlabs.greencontroller.constant.UrlConstants;
 import com.netcommlabs.greencontroller.model.PreferenceModel;
 import com.netcommlabs.greencontroller.services.ProjectWebRequest;
+import com.netcommlabs.greencontroller.utilities.MySharedPreference;
 
 import org.json.JSONObject;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.netcommlabs.greencontroller.activities.ActvityOtp.KEY_LANDED_FROM;
 import static com.netcommlabs.greencontroller.activities.ActvityOtp.KEY_MOBILE_NUM;
@@ -26,19 +44,131 @@ import static com.netcommlabs.greencontroller.activities.ActvityOtp.KEY_MOBILE_N
  */
 
 public class ActvityCheckRegisteredMobileNo extends Activity implements View.OnClickListener, APIResponseListener {
-    private TextView tvSubmiMobile;
+    private TextView tvSubmiMobile, mobileText;
     private ProjectWebRequest request;
     private EditText et_mobile_no;
+    public static final String LANDED_FROM = "landed_from";
+    private String activityFrom, name, email;
+    private FirebaseAuth mAuth;
+    PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
+    private ProgressBar progressPhone;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.check_registered_mobile);
 
+        activityFrom = getIntent().getStringExtra(LANDED_FROM);
+        mobileText = findViewById(R.id.enterText);
+
         tvSubmiMobile = findViewById(R.id.tv_submit_mobile);
         et_mobile_no = findViewById(R.id.et_mobile_no);
+        progressPhone = findViewById(R.id.progressBarPhone);
         tvSubmiMobile.setOnClickListener(this);
+
+        //Add it in the onCreate method, after calling method initFields()
+        mAuth = FirebaseAuth.getInstance();
+
+        if(activityFrom != null){
+            mobileText.setText("Please enter your Mobile no. for google login");
+            startPhoneVerify();
+        }
     }
+
+    void startPhoneVerify()            // verify mobile number enterd by user
+    {
+        mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
+        @Override
+        public void onVerificationCompleted(PhoneAuthCredential credential)
+        {
+            // This callback will be invoked in two situations:
+            // 1 - Instant verification. In some cases the phone number can be instantly
+            //    verified without needing to send or enter a verification code.
+            // 2 - Auto-retrieval. On some devices Google Play services can automatically
+            //  detect the incoming verification SMS and perform verification without
+            //  user action.
+            Log.d("Phone verification", "onVerificationCompleted:" + credential);
+            Toast.makeText(ActvityCheckRegisteredMobileNo.this, "Phone number verified successfully \n" + credential, Toast.LENGTH_SHORT).show();
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();        // check user signed in
+            name = user.getDisplayName();
+            email = user.getEmail();
+            final String uid = user.getUid();
+            //final Uri photoUrl = user.getPhotoUrl();
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference("User");
+            myRef.child(user.getUid()).child("username").setValue(name);
+            myRef.child(user.getUid()).child("email Id").setValue(email);
+            //myRef.child(user.getUid()).child("user photo").setValue(photoUrl.toString());
+            myRef.child(user.getUid()).child("Phone").setValue(et_mobile_no.getText().toString().trim())
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            // Write was successful!
+                            MySharedPreference.getInstance(ActvityCheckRegisteredMobileNo.this).setStringData("UserID", uid);
+                            MySharedPreference.getInstance(ActvityCheckRegisteredMobileNo.this).setMOBILE(et_mobile_no.getText().toString().trim());
+                            //MySharedPreference.getInstance(ActvityCheckRegisteredMobileNo.this).setUser_img(photoUrl.toString());
+                            Toast.makeText(ActvityCheckRegisteredMobileNo.this, "write successful.", Toast.LENGTH_SHORT).show();
+                            // ...
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Write failed
+                            Toast.makeText(ActvityCheckRegisteredMobileNo.this, "write failed!!", Toast.LENGTH_SHORT).show();
+                            // ...
+                        }
+                    });
+
+            progressPhone.setVisibility(View.GONE);
+            //************************************ Firebase: Start main Activity after successfull Google sign in*****************************
+            Intent intent = new Intent(ActvityCheckRegisteredMobileNo.this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            //*********************************************************************************************************************************
+
+                //signInWithPhoneAuthCredential(credential);
+            }
+
+            @Override
+            public void onVerificationFailed(FirebaseException e) {
+                // This callback is invoked in an invalid request for verification is made,
+                // for instance if the the phone number format is not valid.
+                Log.w("Phone verification", "onVerificationFailed", e);
+
+                if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                    // Invalid request
+                    Toast.makeText(ActvityCheckRegisteredMobileNo.this, "Phone number varification failed\n" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    // ...
+                } else if (e instanceof FirebaseTooManyRequestsException) {
+                    // The SMS quota for the project has been exceeded
+                    // ...
+                    Toast.makeText(ActvityCheckRegisteredMobileNo.this, "Phone number varification failed\n" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
+                // Show a message and update the UI
+                // ...
+            }
+
+            @Override
+            public void onCodeSent(String verificationId,
+                                   PhoneAuthProvider.ForceResendingToken token) {
+                // The SMS verification code has been sent to the provided phone number, we
+                // now need to ask the user to enter the code and then construct a credential
+                // by combining the code with a verification ID.
+                Log.d("Phone verification", "onCodeSent:" + verificationId);
+
+                //Save verification ID and resending token so we can use them later
+                // String mVerificationId = verificationId;
+                // String mResendToken = token;
+
+                // ...
+            }
+        };
+    }
+
 
     @Override
     public void onClick(View view) {
@@ -46,9 +176,25 @@ public class ActvityCheckRegisteredMobileNo extends Activity implements View.OnC
             case R.id.tv_submit_mobile:
 
                 if (et_mobile_no.getText().toString().trim().length() > 0) {
-                    if (et_mobile_no.getText().toString().trim().length() == 10) {
-                        hitApi();
-                    } else {
+                    if (et_mobile_no.getText().toString().trim().length() == 10)
+                    {
+                        if(activityFrom != null)
+                        {
+                            Toast.makeText(ActvityCheckRegisteredMobileNo.this, "Verifying phone number..", Toast.LENGTH_SHORT).show();
+                            progressPhone.setVisibility(View.VISIBLE);          // Set progress bar visible
+
+                            PhoneAuthProvider.getInstance().verifyPhoneNumber(
+                                    et_mobile_no.getText().toString(),        // Phone number to verify
+                                    60,                 // Timeout duration
+                                    TimeUnit.SECONDS,   // Unit of timeout
+                                    this,               // Activity (for callback binding)
+                                    mCallbacks);        // OnVerificationStateChangedCallbacks
+                        }
+                        else
+                          hitApi();
+                    }
+                    else
+                        {
                         Toast.makeText(ActvityCheckRegisteredMobileNo.this, " Enter valid Mobile number", Toast.LENGTH_SHORT).show();
                     }
                 } else {

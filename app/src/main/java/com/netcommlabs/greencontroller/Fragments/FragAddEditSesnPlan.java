@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -27,8 +28,17 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
+import com.netcommlabs.greencontroller.activities.LoginAct;
 import com.netcommlabs.greencontroller.activities.MainActivity;
 import com.netcommlabs.greencontroller.constant.UrlConstants;
 import com.netcommlabs.greencontroller.model.DataTransferModel;
@@ -43,10 +53,12 @@ import com.netcommlabs.greencontroller.utilities.MySharedPreference;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -89,6 +101,7 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
     public static final String EXTRA_VALVE_EDITABLE_DATA = "valveEditableData";
     public static final String EXTRA_OPERATION_TYPE = "oprtnType";
     private String macAdd, clkdVlvName, operationType, clkdVlvUUID;
+    private String deviceName, deviceUID;
     private int plusVisibleOf;
     private BLEAppLevel bleAppLevel;
     private TextView quantValue;                 // TextView for Tubby water weight
@@ -190,6 +203,9 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
         clkdVlvName = bundle.getString(EXTRA_VALVE_NAME_DB);    //GET valve number and name
         clkdVlvUUID = bundle.getString(EXTRA_VALVE_UUID);
         operationType = bundle.getString(FragAddEditSesnPlan.EXTRA_OPERATION_TYPE);
+
+        deviceName = bundle.getString(EXTRA_NAME);
+        deviceUID = bundle.getString(EXTRA_ID);
 
 
        // dvc_prefs = mContext.getSharedPreferences("MyPref", MODE_PRIVATE);
@@ -1788,9 +1804,9 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
         }
     }
 
-    public void doneWrtingAllTP() {
+    public void doneWrtingAllTP() {                                //Called from BLE App level class
         saveValveDatatoDB();
-        hitAPI(UrlConstants.TAG_GREEN_MD_SEND);
+        hitAPI(UrlConstants.TAG_GREEN_MD_SEND);                 // write plan to firebase
     }
 
     private int timePointStringToInt(String timePoint) {
@@ -1810,8 +1826,11 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
         super.onDestroyView();
     }
 
-    private void hitAPI(int TAG_API) {
-        if (TAG_API == UrlConstants.TAG_GREEN_MD_SEND) {
+    private void hitAPI(int TAG_API)
+    {
+        //***********Write data to Firebase database*****************************************************************//
+
+        /*if (TAG_API == UrlConstants.TAG_GREEN_MD_SEND) {
             try {
                 request = new ProjectWebRequest(mContext, getParam(TAG_API), UrlConstants.URL_GREEN_MD_SEND, this, UrlConstants.TAG_GREEN_MD_SEND);
                 request.execute();
@@ -1827,11 +1846,63 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
                 clearRef();
                 e.printStackTrace();
             }
+        }*/
+        if (TAG_API == UrlConstants.TAG_GREEN_MD_SEND)
+        {
+            ArrayList<JSONObject> listDeviceLD = databaseHandler.getListDvcLD();
+
+            ArrayList<JSONObject> listValveLD = databaseHandler.getListValveLD();
+
+            ArrayList<JSONObject> listValveSessionLD = databaseHandler.getListValveSessionLD();
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                DatabaseReference myRef = database.getReference("User");
+                //myRef.child(user.getUid()).child("Device").setValue(deviceName);
+                myRef.child(user.getUid()).child("Device: " + deviceName).child("mac Id").setValue(deviceUID);
+                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").child("res_type").setValue("LD");
+                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").push().child("devices").setValue(listDeviceLD.toString());
+                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").push().child("devices_valves_master").setValue(listValveLD.toString());
+                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").push().child("devices_valves_session").setValue(listValveSessionLD.toString())
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                // Write was successful!
+                                Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+
+                                Log.e("@@@ SYNC MD STATUS ", "SUCCESS FROM FragAddEditSesnPlan");
+                                databaseHandler.setOPtoZeroAllMDTables();
+                                // ...
+                                date = new Date();
+                                greenDataSendLastLongDT = date.getTime();
+                                MySharedPreference.getInstance(mContext).setLastDataSendLognDT(greenDataSendLastLongDT);
+                                Log.e("@@@ DATE TIME ", greenDataSendLastLongDT + "");
+                                Log.e("@@@ SYNC LD STATUS ", "SUCCESS FROM FragAddEditSesnPlan");
+
+                                databaseHandler.deleteAllLogsTableData();
+
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Write failed
+                                Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                                // ...
+                            }
+                        });
+            }
+
         }
+
     }
 
     private JSONObject getParam(int TAG_API) {
         JSONObject object = null;
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
         try {
             object = new JSONObject();
             object.put(PreferenceModel.TokenKey, PreferenceModel.TokenValues);
@@ -1853,6 +1924,31 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
                     object.put("devices_valves_master", jsonArrayValveMD);
                     object.put("devices_valves_session", jsonArrayValveSessionMD);
 
+                    /*if(user != null)
+                    {
+                        FirebaseDatabase database = FirebaseDatabase.getInstance();
+                        DatabaseReference myRef = database.getReference("User");
+                        myRef.child(user.getUid()).child("Valve data").child("devices").setValue(listDeviceMD.toString());
+                        myRef.child(user.getUid()).child("Valve data").child("devices_valves_master").setValue(listValveMD.toString());
+                        myRef.child(user.getUid()).child("Valve data").child("devices_valves_session").setValue(listValveSessionMD.toString())
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        // Write was successful!
+                                        Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                                        // ...
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Write failed
+                                        Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                                        // ...
+                                    }
+                                });
+                    }*/
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -1871,6 +1967,33 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
                     object.put("devices", jsonArrayDeviceLD);
                     object.put("devices_valves_master", jsonArrayValveLD);
                     object.put("devices_valves_session", jsonArrayValveSessionLD);
+
+                    //FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    if(user != null)
+                    {
+                        FirebaseDatabase database = FirebaseDatabase.getInstance();
+                        DatabaseReference myRef = database.getReference("User");
+                        myRef.child(user.getUid()).child(deviceName).child("Valve data").child(clkdVlvName).child("res_type").setValue("LD");
+                        myRef.child(user.getUid()).child(deviceName).child("Valve data").child(clkdVlvName).push().child("devices").setValue(listDeviceLD.toString());
+                        myRef.child(user.getUid()).child(deviceName).child("Valve data").child(clkdVlvName).push().child("devices_valves_master").setValue(listValveLD.toString());
+                        myRef.child(user.getUid()).child(deviceName).child("Valve data").child(clkdVlvName).push().child("devices_valves_session").setValue(listValveSessionLD.toString())
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        // Write was successful!
+                                        Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                                        // ...
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Write failed
+                                        Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                                        // ...
+                                    }
+                                });
+                    }
 
                 } catch (Exception e) {
                     e.printStackTrace();

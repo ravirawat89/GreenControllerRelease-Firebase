@@ -6,6 +6,7 @@ package com.netcommlabs.greencontroller.constant;
 
 public class UrlConstants {
     public static final String BASE_URL = "http://myvicinity.netcommlabs.net/api/";
+    public static final String FIREBASE_URL = "https://greensapp-18a5a.firebaseio.com/User.json/";
   //  public static final String BASE_URL = "http://192.168.0.34/vicinityapi/api/";
 
     public static final String LOGIN = BASE_URL + "login";

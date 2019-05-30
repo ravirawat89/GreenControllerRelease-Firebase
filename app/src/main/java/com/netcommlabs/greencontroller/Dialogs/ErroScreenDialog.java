@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
+import com.netcommlabs.greencontroller.activities.ActvityCheckRegisteredMobileNo;
 import com.netcommlabs.greencontroller.activities.LoginAct;
 import com.netcommlabs.greencontroller.activities.MainActivity;
 import com.netcommlabs.greencontroller.constant.UrlConstants;
@@ -93,7 +94,12 @@ public class ErroScreenDialog {
                         Toast.makeText(mContext, "Kindly check your net connection!", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                } else {
+                }
+                else if(Tag == LoginAct.TAG_NO_INTERNET){                  //Check internet connection dialog box for LoginAct google signIn
+                    dialog.dismiss();
+                    ((LoginAct) mContext).checkNetConnection();
+                }
+                else {
                     if (NetworkUtils.isConnected(mContext)) {
                         dialog.dismiss();
                         listener.doRetryNow(Tag);

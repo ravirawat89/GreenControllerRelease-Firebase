@@ -15,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -56,6 +57,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.netcommlabs.greencontroller.Dialogs.AppAlertDialog;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Fragments.FragAddEditAddress;
@@ -85,6 +88,7 @@ import com.netcommlabs.greencontroller.utilities.TelephonyInfo;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -181,7 +185,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         btnMapBack = findViewById(R.id.btnAddressCancel);
         nav_header = findViewById(R.id.nav_header);
         username_header = (TextView) findViewById(R.id.username_header);
-        username_header.setText(preference.getName());
+
+        //username_header.setText(preference.getName());                  // Display Username on click Hamburger Icon from shared preferences
+        if(MySharedPreference.getInstance(MainActivity.this).getUserName() != null)
+            username_header.setText(MySharedPreference.getInstance(MainActivity.this).getUserName());
+
         circularIVNav = (ImageView) findViewById(R.id.circularIVNav);
         llAddNewAddress = findViewById(R.id.llAddNewAddress);
 
@@ -205,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if (!userImageBase64.isEmpty()) {
             byte[] decodedString = Base64.decode(userImageBase64, Base64.DEFAULT);
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
             circularIVNav.setImageBitmap(decodedByte);
         } else {
             circularIVNav.setImageResource(R.drawable.user_icon);
@@ -226,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         //Adding first Fragment(FragDashboardPebbleHome)
         MyFragmentTransactions.replaceFragment(mContext, new FragDashboardPebbleHome(), TagConstant.DASHBOARD_PEBBLE_HOME, frm_lyt_container_int, true);
     }
+
 
     public void setupUIForSoftkeyboardHide(View view) {
         // Set up touch listener for non-text box views to hide keyboard.
@@ -642,7 +652,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         } catch (Exception e) {
             e.printStackTrace();
         }
-        hitAPI(UrlConstants.SAVE_IMEI_TAG);
+       // hitAPI(UrlConstants.SAVE_IMEI_TAG);
     }
 
     @Override
@@ -851,13 +861,34 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     public void syncUnsyncDataClearAllAndLogout() {
         if (NetworkUtils.isConnected(mContext)) {
-            hitAPI(UrlConstants.TAG_GREEN_MD_SEND);
+          //  hitAPI(UrlConstants.TAG_GREEN_MD_SEND);
+
+    //**************************** Clear all log data when user click on logout button*********************************************************
+            databaseHandler.setOPtoZeroAllMDTables();
+
+            greenDataSendLastLongDT = date.getTime();
+            MySharedPreference.getInstance(mContext).setLastDataSendLognDT(greenDataSendLastLongDT);
+            Log.e("@@@ SYNC LD STATUS ", "SUCCESS FROM MainActivity");
+
+            databaseHandler.deleteAllLogsTableData();
+            // If logout clicked it would be true
+            if (isLogoutTrue) {
+                clearSPDeleteDBandLogout();
+            }
+     //***********************************************************************************************************************88
+
         } else {
             ErroScreenDialog.showErroScreenDialog(mContext, "Found unsynced data locally, kindly connect to internet and trigger sync. Else data will be lost", TAG_SYNC_LOGOUT);
         }
     }
 
-    public void clearSPDeleteDBandLogout() {
+    public void clearSPDeleteDBandLogout()                 // exit from database on Logout
+    {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if(user != null)
+        {
+            FirebaseAuth.getInstance().signOut();
+        }
         MySharedPreference.getInstance(mContext).clearAll();
         databaseHandler.closeDB();
         mContext.deleteDatabase(DatabaseHandler.DATABASE_NAME);

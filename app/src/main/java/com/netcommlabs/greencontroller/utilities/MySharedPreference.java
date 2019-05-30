@@ -178,4 +178,24 @@ public class MySharedPreference {
     public long getLastDataSendLognDT() {
         return sharedpreferences.getLong(KEY_LAST_DATA_SEND_LONG_DT, 0);
     }
+
+    public void setUserName(String data) {
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putString("UserName", data);
+        editor.commit();
+    }
+
+    public String getUserName() {
+        return sharedpreferences.getString("UserName", "");
+    }
+
+    public void setUserEmail(String data) {
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putString("UserEmail", data);
+        editor.commit();
+    }
+
+    public String getUserEmail() {
+        return sharedpreferences.getString("UserEmail", "");
+    }
 }

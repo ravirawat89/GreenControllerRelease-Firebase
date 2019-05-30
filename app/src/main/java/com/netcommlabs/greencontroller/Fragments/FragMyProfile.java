@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -22,6 +23,7 @@ import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -50,6 +52,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -144,6 +147,13 @@ public class FragMyProfile extends Fragment implements View.OnClickListener, API
         et_mailid.setText(preference.getEmail());
         tv_phone_no.setText(preference.getMobile());
 
+        if(MySharedPreference.getInstance(mContext).getUserName() != null)
+            et_name.setText(MySharedPreference.getInstance(mContext).getUserName());
+        if(MySharedPreference.getInstance(mContext).getUserEmail() != null)
+            et_mailid.setText(MySharedPreference.getInstance(mContext).getUserEmail());
+        if(MySharedPreference.getInstance(mContext).getMOBILE() != null)
+            tv_phone_no.setText(MySharedPreference.getInstance(mContext).getMOBILE());
+
        /* if (MySharedPreference.getInstance(getActivity()).getUser_img() != "") {
             Picasso
                     .with(mContext)
@@ -157,12 +167,13 @@ public class FragMyProfile extends Fragment implements View.OnClickListener, API
         if (userImageBase64 != "") {
             byte[] decodedString = Base64.decode(userImageBase64, Base64.DEFAULT);
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-            image_user.setImageBitmap(decodedByte);
+           image_user.setImageBitmap(decodedByte);
            /* Picasso
                     .with(MainActivity.this)
                     .load(MySharedPreference.getInstance(MainActivity.this).getUser_img()).skipMemoryCache().placeholder(R.drawable.user_profile_icon)
                     .into(circularIVNav);*/
-        } else {
+        }
+        else {
             image_user.setImageResource(R.drawable.user_icon);
         }
 
@@ -285,9 +296,8 @@ public class FragMyProfile extends Fragment implements View.OnClickListener, API
                     if (et_phoneNo.getText().toString().equals(preference.getMobile())) {
                         Toast.makeText(mContext, "Please edit Mobile number", Toast.LENGTH_SHORT).show();
                     } else {
-                        hitApiChangeMobileNo();
+                        //hitApiChangeMobileNo();             // User cannot change Mobile number of google signin
                     }
-
 
                 } else {
                     Toast.makeText(getActivity(), "Please enter Mobile number", Toast.LENGTH_SHORT).show();
@@ -302,7 +312,7 @@ public class FragMyProfile extends Fragment implements View.OnClickListener, API
                 et_match_pass.setCursorVisible(true);
 
                 if (et_match_pass.getText().toString().trim().length() > 0) {
-                    hitApiForMatchPassword();
+                    //hitApiForMatchPassword();                                // Don't allow user to change Google sign in password
                 } else {
                     Toast.makeText(getActivity(), "Please enter your password ", Toast.LENGTH_SHORT).show();
                     match_password_layout.setVisibility(View.VISIBLE);
@@ -312,7 +322,7 @@ public class FragMyProfile extends Fragment implements View.OnClickListener, API
 
             case R.id.tv_save:
                 tv_edit.setVisibility(View.VISIBLE);
-                hitApiForUpdateProfiler();
+                //hitApiForUpdateProfiler();                 //Don't allow user to change profile
                 tv_save.setVisibility(View.GONE);
                 et_name.setEnabled(false);
                 et_mailid.setEnabled(false);
@@ -338,7 +348,7 @@ public class FragMyProfile extends Fragment implements View.OnClickListener, API
 
                                 Toast.makeText(mContext, "Password should be greater than 5 characters ", Toast.LENGTH_SHORT).show();
                             } else {
-                                hitApiChangePassword();
+                                //hitApiChangePassword();             // User can't change password after google signin
                                 // System.out.println("Valid");
 
                             }
