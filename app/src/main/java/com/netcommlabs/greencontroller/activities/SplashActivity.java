@@ -5,6 +5,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.netcommlabs.greencontroller.R;
 import com.netcommlabs.greencontroller.model.PreferenceModel;
 import com.netcommlabs.greencontroller.utilities.MySharedPreference;
@@ -14,10 +19,20 @@ import com.netcommlabs.greencontroller.utilities.MySharedPreference;
  */
 
 public class SplashActivity extends Activity {
+
+    String userId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.actvity_splash);
+
+       // FirebaseDatabase.getInstance().setPersistenceEnabled(true);  //update data to firebase database when user is online
+
+        // [START set_firestore_settings]
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .build();
+        FirebaseFirestore.getInstance().setFirestoreSettings(settings);
 
         startNow();
     }
@@ -30,8 +45,11 @@ public class SplashActivity extends Activity {
 
                     //PreferenceModel model = MySharedPreference.getInstance(SplashActivity.this).getsharedPreferenceData();
                     String userid = MySharedPreference.getInstance(SplashActivity.this).getStringData("UserID");
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    if(user != null)
+                            userId = user.getUid();
                    // if (model.getUser_id() != null && model.getUser_id().length() > 0) {
-                    if (userid != null)
+                    if (user != null)
                     {
                         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

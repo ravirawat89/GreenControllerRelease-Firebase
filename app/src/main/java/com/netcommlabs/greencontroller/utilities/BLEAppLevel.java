@@ -1,19 +1,33 @@
 package com.netcommlabs.greencontroller.utilities;
 
+import android.Manifest;
 import android.bluetooth.BluetoothGattService;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.netcommlabs.greencontroller.Constants;
 import com.netcommlabs.greencontroller.Fragments.FragAddEditSesnPlan;
 import com.netcommlabs.greencontroller.Fragments.FragAvailableDevices;
@@ -26,10 +40,16 @@ import com.netcommlabs.greencontroller.model.DataTransferModel;
 import com.netcommlabs.greencontroller.services.BleAdapterService;
 import com.netcommlabs.greencontroller.sqlite_db.DatabaseHandler;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 import static android.content.Context.MODE_PRIVATE;
@@ -62,7 +82,11 @@ public class BLEAppLevel {
     private static FragDeviceDetails fragDeviceDetails;
     private SharedPreferences pref, devicePrefs;
     private int valve_number = 1, deviceType;
-
+    public static volatile int LogReadingIndex = 0;           // read index for data from esp32
+    private File logFile, alarmsFile;                          // log .txt file for data received
+    private FileOutputStream logOutputHandler, alarmOutputHandler;
+    private String deviceName, dvcLoc;
+    private int planId = 1;
 
     public static BLEAppLevel getInstance(MainActivity mContext, Fragment myFragment, String macAddress) {
         if (bleAppLevel == null) {
@@ -197,6 +221,9 @@ public class BLEAppLevel {
                         mContext.MainActBLEgotConnected();
                         //Setting current time to BLE
                         onSetTime();
+
+                        //LogReadingIndex = MySharedPreference.getInstance(mContext).getLogIndex();      // Read last updated log read index for file
+
                         if (myFragment instanceof FragAvailableDevices) {
                             ((FragAvailableDevices) myFragment).dvcIsReadyNowNextScreen();
                         }
@@ -225,7 +252,7 @@ public class BLEAppLevel {
                             editor.putLong("Weight_Data", weight);
                             editor.putInt("Calibration_Status", cal);
                             editor.putInt("Device_Code", deviceType);
-                            editor.commit();
+                            editor.apply();
 
                             devicePrefs = mContext.getSharedPreferences("DevicePref", MODE_PRIVATE);
                             SharedPreferences.Editor dvcEditor = devicePrefs.edit();
@@ -234,14 +261,284 @@ public class BLEAppLevel {
                             {
                                 dvcEditor.putInt("Valve_Number", 0);
                                 dvcEditor.putString("Tubby_addr", macAddress);
-                                dvcEditor.commit();
+                                dvcEditor.apply();
                             }
                             if(deviceType == 2)         // Device: MVC
                             {
                                 dvcEditor.putString("MVC_addr", macAddress);
-                                dvcEditor.commit();
+                                dvcEditor.apply();
                             }
+
+                            if(isBLEConnected)
+                                onReadLog();
                             //MyFragmentTransactions.replaceFragment(mContext, fragDevice, TagConstant.DEVICE_DETAILS, mContext.frm_lyt_container_int, true);
+                        }
+                    }
+
+                    if(bundle.get(BleAdapterService.PARCEL_CHARACTERISTIC_UUID).toString().toUpperCase().equals(BleAdapterService.LOG_CHARACTERISTIC_UUID)) {
+                        b = bundle.getByteArray(BleAdapterService.PARCEL_VALUE);
+                        String str = "",eventData = "", time_point;
+                        Map<String, Object> logEvent = new HashMap<>();
+                        Map<String, Object> connectEvent = new HashMap<>();
+                        String[] dayOfWeek ={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+                        if(b.length > 0) {
+                            if (b[0]!= 0) {
+
+                                int volume=0;
+                                int duration=0;
+                                long date = ((16777216 * bluetooth_le_adapter.convertByteToInt(b[1])) + (65536 * bluetooth_le_adapter.convertByteToInt(b[2])) + (256 * bluetooth_le_adapter.convertByteToInt(b[3])) + bluetooth_le_adapter.convertByteToInt(b[4]));          // receive date of log events from device
+                                //showMsg("date = " + date);
+                                //Date eventDate = new Date(date * 1000); //Arduino provides seconds since 1 Jan 1970. Android uses milliseconds since 1 Jan 1970. So, multiplying by 1000.
+                                String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(date * 1000));
+
+                                String logDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date(date * 1000));
+
+                                byte[] bytes = {b[5], b[6], b[7], b[8], b[9], b[10]};
+
+
+                                StringBuilder sb = new StringBuilder();    // convert received MAC id of device into string
+                                for (byte data : bytes) {
+                                    sb.append(String.format("%02X", data));
+                                }
+                                //byte[] bytes = {b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12], b[13], b[14]};
+
+                                    /*try {
+                                        str = new String(bytes, "UTF-8");  // Best way to decode using "UTF-8"
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                    }*/
+                                //}
+                                dvcLoc = mContext.getDeviceLocation();          // get device location when connected
+
+                                switch(b[0])                                    // convert different event codes into events to store in firestore
+                                {
+                                    case  1 :   str = "Device connected ";
+                                                eventData = sb.toString();
+                                                connectEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                connectEvent.put("Event", "Device connected");
+                                                connectEvent.put("Event time", dateString);
+                                                connectEvent.put("MAC", eventData);
+                                                connectEvent.put("Device Location", dvcLoc);
+                                                break;
+
+                                    case  2 :   str = "Device disconnected ";
+                                                eventData = sb.toString();
+                                                connectEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                connectEvent.put("Event", "Device disconnected");
+                                                connectEvent.put("Event time", dateString);
+                                                connectEvent.put("MAC", eventData);
+                                                connectEvent.put("Device Location", dvcLoc);
+                                                break;
+
+                                    case 17 :   if(deviceType == 2)
+                                                {
+                                                str = "Valve " + bluetooth_le_adapter.convertByteToInt(b[5]) + " open";
+                                                duration = (256 * bluetooth_le_adapter.convertByteToInt(b[11])) + bluetooth_le_adapter.convertByteToInt(b[12]);
+                                                volume = (256 * bluetooth_le_adapter.convertByteToInt(b[13])) + bluetooth_le_adapter.convertByteToInt(b[14]);
+                                                eventData = "Volume = " + volume + " " + "Duration = " + duration;
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Valve open");
+                                                logEvent.put("Event time", dateString);
+                                                }
+                                                else if(deviceType == 3)
+                                                {
+                                                    str = "water pump open";
+                                                    duration = (256 * bluetooth_le_adapter.convertByteToInt(b[11])) + bluetooth_le_adapter.convertByteToInt(b[12]);
+                                                    volume = (256 * bluetooth_le_adapter.convertByteToInt(b[13])) + bluetooth_le_adapter.convertByteToInt(b[14]);
+                                                    eventData = "Volume = " + volume + " " + "Duration = " + duration;
+                                                    logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                    logEvent.put("Event", "Water pump open");
+                                                    logEvent.put("Event time", dateString);
+                                                }
+                                                 break;
+
+                                    case 18 :   if(deviceType == 2)      // device = 2 for MVC
+                                              {
+                                                str = "Valve " +bluetooth_le_adapter.convertByteToInt(b[5])+ " close";
+                                                volume = (256 * bluetooth_le_adapter.convertByteToInt(b[13])) + bluetooth_le_adapter.convertByteToInt(b[14]);
+                                                eventData = "Counter value = "+volume;
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Valve close");
+                                                logEvent.put("Volume(in ml)", Integer.toString(volume));
+                                                logEvent.put("Event time", dateString);
+                                              }
+                                              else if(deviceType == 3)    // device = 3 for Tubby
+                                              {
+                                                  str = "Water pump closed";
+                                                  volume = (256 * bluetooth_le_adapter.convertByteToInt(b[13])) + bluetooth_le_adapter.convertByteToInt(b[14]);
+                                                  eventData = "Weight = "+volume;
+                                                  logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                  logEvent.put("Event", "Water pump close");
+                                                  logEvent.put("Volume(in ml)", Integer.toString(volume));
+                                                  logEvent.put("Event time", dateString);
+                                              }
+                                                break;
+
+                                    case 19 :   str = "Timepoint missed";
+                                                time_point = (dayOfWeek[b[7]-1]+" "+bluetooth_le_adapter.convertByteToInt(b[8])+":"+bluetooth_le_adapter.convertByteToInt(b[9])+":"+bluetooth_le_adapter.convertByteToInt(b[10]));
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Time point missed");
+                                                logEvent.put("Missed Time point", time_point);
+                                                logEvent.put("Event time", dateString);
+
+
+                                    case 20 :   str = "Old timepoints erased: ";
+                                                eventData = "Valve "+bluetooth_le_adapter.convertByteToInt(b[5]) ;
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Old timepoints erased");
+                                                logEvent.put("Event time", dateString);
+                                                break;
+
+                                    case 21 :   str = "New session time point loaded: ";
+                                                duration = (256 * bluetooth_le_adapter.convertByteToInt(b[11])) + bluetooth_le_adapter.convertByteToInt(b[12]);
+                                                volume = (256 * bluetooth_le_adapter.convertByteToInt(b[13])) + bluetooth_le_adapter.convertByteToInt(b[14]);
+                                                eventData = (dayOfWeek[b[7]-1]+" "+bluetooth_le_adapter.convertByteToInt(b[8])+":"+bluetooth_le_adapter.convertByteToInt(b[9])+":"+bluetooth_le_adapter.convertByteToInt(b[10]) + " Volume="+volume+" Duration="+duration);
+                                                time_point = (dayOfWeek[b[7]-1]+" "+bluetooth_le_adapter.convertByteToInt(b[8])+":"+bluetooth_le_adapter.convertByteToInt(b[9])+":"+bluetooth_le_adapter.convertByteToInt(b[10]));
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "New session time point loaded");
+                                                logEvent.put(("Time point " + planId), time_point);
+                                                logEvent.put("Volume(in ml)", Integer.toString(volume));
+                                                logEvent.put("Duration", Integer.toString(duration));
+                                                logEvent.put("Event time", dateString);
+                                                planId++;
+                                                break;
+
+                                    case 81 :   str = "Flush open: Valve "+ bluetooth_le_adapter.convertByteToInt(b[5]);
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Flush open");
+                                                logEvent.put("Event time", dateString);
+                                                break;
+
+                                    case 82 :   str = "Flush close: Valve "+ bluetooth_le_adapter.convertByteToInt(b[5]);
+                                                volume = (256 * bluetooth_le_adapter.convertByteToInt(b[13])) + bluetooth_le_adapter.convertByteToInt(b[14]);
+                                                eventData = "Counter value = "+volume;
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Flush close");
+                                                logEvent.put("Volume(in ml)", Integer.toString(volume));
+                                                logEvent.put("Event time", dateString);
+                                                break;
+
+                                    case 97 :   str =  "Pebble Start";
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Pebble Start");
+                                                logEvent.put("Event time", dateString);
+                                                break;
+
+                                    case 98 :   str = "Pebble Stop";
+                                                eventData = " Valve "+bluetooth_le_adapter.convertByteToInt(b[5])+" alarms erased";
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Pebble Stop");
+                                                logEvent.put("Event time", dateString);
+                                                break;
+
+                                    case 99 :   str = "Pebble pause";
+                                                logEvent.put("Event Id", Integer.toHexString(b[0]));
+                                                logEvent.put("Event", "Pebble Stop");
+                                                logEvent.put("Event time", dateString);
+                                                break;
+
+                                    case 113 :  str = "No. of pots";
+                                                duration = (256 * bluetooth_le_adapter.convertByteToInt(b[11])) + bluetooth_le_adapter.convertByteToInt(b[12]);
+                                                eventData = ": "+duration;
+                                                break;
+                                }
+                                //showMsg("Event code=" + Integer.toHexString(b[0]) + " " + dateString + ", " + sb.toString() + ","+ volume + ","+ duration);
+                                //showMsg(dateString + " " +"Event="+Integer.toHexString(b[0])+" "+str +" "+eventData);
+
+                                //writeToFile("Event code="+Integer.toHexString(b[0])+" "+eventDate.toString());
+                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                if (user != null)
+                                {
+                                    /*FirebaseDatabase database = FirebaseDatabase.getInstance();
+                                    DatabaseReference myRef = database.getReference("User/"+user.getUid());
+                                    myRef.child("Log data").child(dateString);
+                                    myRef.child("Log data").child(dateString).child("Event Id: "+ Integer.toHexString(b[0]));
+                                    myRef.child("Log data").child(dateString).child("Event Id: "+ Integer.toHexString(b[0])).child("Event").setValue(str);
+                                    myRef.child("Log data").child(dateString).child("Event Id: "+ Integer.toHexString(b[0])).child("Data").setValue(eventData);*/
+                                    /*Map<String, Object> taskMap = new HashMap<>();
+                                    taskMap.put("Event Id", Integer.toHexString(b[0]));
+                                    taskMap.put("Time", dateString);
+                                    taskMap.put("Event occured", str);
+                                    taskMap.put("Data", eventData);
+                                    myRef.push().updateChildren(taskMap);*/
+
+                                    // Access a Cloud Firestore instance from your Activity
+                                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                                    // Create a new user with a first and last name
+                                    deviceName = MySharedPreference.getInstance(mContext).getDvcNameFromDvcDetails();
+
+                                    if(deviceName.isEmpty())
+                                        deviceName = macAddress;
+
+                                    if((b[0] == 1) || (b[0] == 2))
+                                    {                                                  // store device connections logs in separate file
+                                        // Add a new document with a generated ID
+                                        db.collection(user.getEmail()).document("User devices").collection(deviceName).document("Connection logs").collection(logDate).document(dateString)
+                                                .set(connectEvent, SetOptions.merge())
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        // Write was successful!
+                                                        Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                                                        onReadLogDynamic();
+                                                    }
+
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        // Write failed
+                                                        Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                                                        // ...
+                                                    }
+                                                });
+                                    }
+                                    else
+                                        {
+                                            db.collection(user.getEmail()).document("User devices").collection(deviceName).document("Device logs").collection("Valve " + bluetooth_le_adapter.convertByteToInt(b[5])).document("Event logs").collection(logDate).document(dateString)
+                                                    .set(logEvent, SetOptions.merge())
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            // Write was successful!
+                                                            Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                                                            onReadLogDynamic();
+                                                        }
+
+                                                    })
+                                                    .addOnFailureListener(new OnFailureListener() {
+                                                        @Override
+                                                        public void onFailure(@NonNull Exception e) {
+                                                            // Write failed
+                                                            Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                                                            // ...
+                                                        }
+                                                    });
+                                        }
+                                }
+                            // ******************************** Create log file in phone to save esp32 log data*************************************
+                                if (createLogFile()) {
+                                    try {
+
+                                        //logOutputHandler.write(("Event code=" + Integer.toHexString(b[0]) + ", " + dateString +" "+ sb.toString()+ ", "+ volume + ", "+ duration+ "\n").getBytes());
+                                        logOutputHandler.write((dateString + " "+"Event="+Integer.toHexString(b[0])+" "+str +" "+eventData+ "\n").getBytes());
+                                        alarmOutputHandler.write((Integer.toHexString(b[0]) + "," + dateString + "," + str + "," + eventData +"\n").getBytes());
+
+                                        logOutputHandler.close();
+                                        alarmOutputHandler.close();
+
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                              //***************************************************************************************************************************
+                            }
+
+
+                        } else {
+                            showMsg("No log data");
                         }
                     }
                     break;
@@ -345,6 +642,25 @@ public class BLEAppLevel {
                     {
                         if(isBLEConnected)
                             onReadWeight();
+                    }
+
+                    if (bundle.get(BleAdapterService.PARCEL_CHARACTERISTIC_UUID).toString()
+                            .toUpperCase().equals(BleAdapterService.LOG_CHARACTERISTIC_UUID)) {
+                        b = bundle.getByteArray(BleAdapterService.PARCEL_VALUE);
+                        if (b.length > 0)
+                        {
+                            showMsg("Read characteristic : " + LogReadingIndex);
+                            if(bluetooth_le_adapter.readCharacteristic(BleAdapterService.PEBBLE_SERVICE_UUID, BleAdapterService.LOG_CHARACTERISTIC_UUID) == TRUE)
+                            {
+                                if(LogReadingIndex == 0)
+                                   showMsg("Log Event Read");
+                                LogReadingIndex++;
+
+                            } else {
+                                if(LogReadingIndex == 0)
+                                   showMsg("Log Event Read Failed");
+                            }
+                        }
                     }
                     break;
             }
@@ -468,7 +784,7 @@ public class BLEAppLevel {
         );
     }*/
 
-   public void onReadWeight()
+   private void onReadWeight()
    {
        if(bluetooth_le_adapter.readCharacteristic(
                //BleAdapterService.BATTERY_SERVICE_SERVICE_UUID,
@@ -482,6 +798,32 @@ public class BLEAppLevel {
            showMsg("weight read failed");
        }
    }
+
+    private void onReadLog()
+    {
+        int iLogReadingIndexMSB = LogReadingIndex / 256;
+        int iLogReadingIndexLSB = LogReadingIndex % 256;
+        byte readingIndex0 = (byte) iLogReadingIndexMSB;
+        byte readingIndex1 = (byte) iLogReadingIndexLSB;
+        byte[] readingIndex = {readingIndex0, readingIndex1};
+        bluetooth_le_adapter.writeCharacteristic(
+                BleAdapterService.PEBBLE_SERVICE_UUID,
+                BleAdapterService.LOG_CHARACTERISTIC_UUID, readingIndex
+        );
+    }
+
+    private void onReadLogDynamic()
+    {
+        int iLogReadingIndexMSB = LogReadingIndex / 256;
+        int iLogReadingIndexLSB = LogReadingIndex % 256;
+        byte readingIndex0 = (byte) iLogReadingIndexMSB;
+        byte readingIndex1 = (byte) iLogReadingIndexLSB;
+        byte[] readingIndex = {readingIndex0, readingIndex1};
+        bluetooth_le_adapter.writeCharacteristic(
+                BleAdapterService.PEBBLE_SERVICE_UUID,
+                BleAdapterService.LOG_CHARACTERISTIC_UUID, readingIndex
+        );
+    }
 
     public void onSetTime() {
         Calendar calendar = Calendar.getInstance();
@@ -546,7 +888,7 @@ public class BLEAppLevel {
         }
     }
 
-    public void eraseOldTimePoints(FragAddEditSesnPlan fragAddEditSesnPlan, int etDisPntsInt, int etDurationInt, int etWaterQuantWithDPInt, ArrayList<DataTransferModel> listSingleValveData, int valveCount) {
+    public void eraseOldTimePoints(FragAddEditSesnPlan fragAddEditSesnPlan, int etDisPntsInt, int etDurationInt, int etWaterQuantWithDPInt, ArrayList<DataTransferModel> listSingleValveData, int valveCount, String dvc_name) {
         myFragment = fragAddEditSesnPlan;
 
         this.etDisPntsInt = etDisPntsInt;
@@ -554,6 +896,7 @@ public class BLEAppLevel {
         this.etWaterQuantWithDPInt = etWaterQuantWithDPInt;
         this.listSingleValveData = listSingleValveData;
         this.valve_number = valveCount;
+        this.deviceName = dvc_name;
 
         byte[] timePoint = {0, 0, 0, 0, 0, 0, 0, 0, 0, (byte) valveCount};
         /*bluetooth_le_adapter.writeCharacteristic(BleAdapterService.TIME_POINT_SERVICE_SERVICE_UUID,
@@ -563,7 +906,8 @@ public class BLEAppLevel {
     }
 
     public void disconnectBLECompletely() {
-        if (bluetooth_le_adapter != null) {
+        if (bluetooth_le_adapter != null)
+        {
             try {
                 if (bleAppLevel != null) {
                     bleAppLevel = null;
@@ -574,6 +918,7 @@ public class BLEAppLevel {
                     if (getBLEConnectedOrNot()) {
                         bluetooth_le_adapter.disconnect();
                     }
+
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -636,6 +981,7 @@ public class BLEAppLevel {
                     BleAdapterService.COMMAND_CHARACTERISTIC_UUID, valveCommand
             );
         }
+        saveValveEvent(cmdTypeName, valve);
     }
 
     void startSendData() {
@@ -693,6 +1039,173 @@ public class BLEAppLevel {
                 BleAdapterService.NEW_WATERING_TIME_POINT_CHARACTERISTIC_UUID, timePoint);*/
         bluetooth_le_adapter.writeCharacteristic(BleAdapterService.PEBBLE_SERVICE_UUID,
                 BleAdapterService.NEW_WATERING_TIME_POINT_CHARACTERISTIC_UUID, timePoint);
+
+        saveValvePlan();
+
+    }
+
+    //******************************Create Log data text logFile for received data from device i.e Tubby or MVC**********************************
+    boolean createLogFile()
+    {
+        //Toast.makeText(getBaseContext(), "inside create", Toast.LENGTH_SHORT).show();
+        if(!(isExternalStorageWritable()&&isStoragePermissionGranted()))
+            return false;	// Check if the external storage is available for write
+        else {
+            String dirPath = Environment.getExternalStorageDirectory().getPath()+"/Logger/";
+            //String dirPath = getFilesDir().getAbsolutePath()+"/Logger/";
+            File directory = new File(dirPath);
+            logFile = new File(dirPath+"/LogData.txt");
+            alarmsFile = new File(dirPath+"/AlarmsPlan.csv");
+
+            if(!(logFile.exists()))
+            {
+                try {
+                    if (!(directory.exists() && directory.isDirectory())) {    //If the Directory does not exist: create a new one
+                        if (directory.mkdir()) {
+                            System.out.println("Directory created");
+                        } else {
+                            System.out.println("Directory is not created");
+                        }
+                    }
+                    logOutputHandler = new FileOutputStream(logFile);    //// Create File for log data
+                    logOutputHandler.write(("\n").getBytes());
+                    if(!(alarmsFile.exists()))
+                    {
+                        alarmOutputHandler = new FileOutputStream(alarmsFile);    //// Create File for alarms plan loaded
+                        //logOutputHandler.write(("\n").getBytes());
+                        alarmOutputHandler.write(("Event Id " + "," + "Time " + "," + "Event occured " + "," + "Data" + "\n").getBytes());
+                    }
+                    else
+                        alarmOutputHandler = new FileOutputStream(alarmsFile, true);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                try{
+                    logOutputHandler = new FileOutputStream(logFile, true);
+                    // logOutputHandler.write(("\n\n").getBytes());
+                    if(alarmsFile.exists())
+                        alarmOutputHandler = new FileOutputStream(alarmsFile, true);
+                }
+                catch(IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+        return true;
+    }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        //Toast.makeText(getBaseContext(),state, Toast.LENGTH_SHORT).show();
+        //showMsg(state);
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    public  boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
+            if (mContext.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.d("LOG PERMISSION","Permission is granted");
+                return true;
+            } else {
+
+                Log.v("LOG PERMISSION","Permission is revoked");
+                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v("LOG PERMISSION","Permission is granted");
+            return true;
+        }
+    }
+
+    public void saveValvePlan()                     // Function to save device timepoint plans as per valve number and data in firestore database
+    {
+        String[] dayOfWeek ={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+        String tp_day = dayOfWeek[listSingleValveData.get(dataSendingIndex).getDayOfWeek()-1];
+        String tp_hour = Integer.toString(listSingleValveData.get(dataSendingIndex).getHourOfDay()) + ":00";
+        String tp_vol = Integer.toString(etWaterQuantWithDPInt);
+        String tp_duration = Integer.toString(etDurationInt);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null)
+        {
+            // Access a Cloud Firestore instance from your Activity
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            Calendar c = Calendar.getInstance();
+            System.out.println("Current time => "+c.getTime());
+
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            String formattedDate = df.format(c.getTime());
+            // Create a new user with a first and last name
+            Map<String, Object> plan_data = new HashMap<>();
+            plan_data.put("Day", tp_day);
+            plan_data.put("Time", tp_hour);
+            plan_data.put("Volume", tp_vol);
+            plan_data.put("Duration", tp_duration);
+
+            // Add a new document with a generated ID
+            db.collection(user.getEmail()).document("User devices").collection(deviceName).document("Valve "+ valve_number).collection("Session plans on "+ formattedDate).document(Integer.toString(dataSendingIndex + 1))
+                    .set(plan_data)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            // Write was successful!
+                            Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                        }
+
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Write failed
+                            Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                            // ...
+                        }
+                    });
+        }
+    }
+
+    private void saveValveEvent(String event, int valNum)                 // Function to save device events as per valve number and data in firestore database
+    {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null)
+        {
+            // Access a Cloud Firestore instance from your Activity
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            Calendar c = Calendar.getInstance();
+            System.out.println("Current time => "+c.getTime());
+
+            SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd");
+            String formattedDate = date.format(c.getTime());
+
+            SimpleDateFormat date_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedTime = date_time.format(c.getTime());
+
+            deviceName = MySharedPreference.getInstance(mContext).getDvcNameFromDvcDetails();
+
+            // Create a new user with a first and last name
+            Map<String, Object> cmd_data = new HashMap<>();
+            cmd_data.put("Event", event);
+            cmd_data.put("Time", formattedTime);
+
+            if(deviceType == 3)
+                valNum = 1;
+            // Add a new document with a generated ID
+            db.collection(user.getEmail()).document("User devices").collection(deviceName).document("Valve "+ valNum).collection("Valve events").document(formattedTime).set(cmd_data, SetOptions.merge());
+        }
 
     }
 

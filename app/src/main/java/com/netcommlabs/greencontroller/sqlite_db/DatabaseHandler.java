@@ -501,7 +501,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db = this.getReadableDatabase();
         List<ModalAddressModule> listModalAddressModule = new ArrayList<>();
         Cursor cursor;
-        //Get all Address form data
+        //Get all Address from data
         if (addressUUID.isEmpty()) {
             cursor = db.query(TABLE_ADDRESS_MASTER, new String[]{CLM_ADDRESS_UUID, CLM_ADDRESS_FLAT_HOUSE_BUILDING, CLM_ADDRESS_TOWER_STREET, CLM_ADDRESS_AREA_LAND_LOCALITY, CLM_ADDRESS_PIN_CODE, CLM_ADDRESS_CITY, CLM_ADDRESS_STATE, CLM_RADIO_ADDRESS_NAME}, CLM_ADDRESS_IS_SHOW_STATUS + " = ? ",
                     new String[]{String.valueOf(1)}, null, null, null, null);

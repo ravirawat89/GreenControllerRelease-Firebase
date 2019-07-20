@@ -34,6 +34,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
@@ -54,7 +57,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -529,7 +534,8 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
                     }
                     else
                         //This method will automatically followed by loading new time points method
-                        bleAppLevel.eraseOldTimePoints(FragAddEditSesnPlan.this, etDisPntsInt, etDurationInt, etWaterQuantWithDPInt, listSingleValveData, valveCount);
+                        bleAppLevel.eraseOldTimePoints(FragAddEditSesnPlan.this, etDisPntsInt, etDurationInt, etWaterQuantWithDPInt, listSingleValveData, valveCount, deviceName);
+
                 } else {
                     AppAlertDialog.dialogBLENotConnected(mContext, myRequestedFrag, bleAppLevel, macAdd);
                 }
@@ -1847,27 +1853,53 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
                 e.printStackTrace();
             }
         }*/
-        if (TAG_API == UrlConstants.TAG_GREEN_MD_SEND)
+        if (TAG_API == UrlConstants.TAG_GREEN_MD_SEND)           //Write valve data as JSON string in firebase realtime database
         {
-            ArrayList<JSONObject> listDeviceLD = databaseHandler.getListDvcLD();
+            ArrayList<JSONObject> listDeviceMD = databaseHandler.getListDvcMD();
 
-            ArrayList<JSONObject> listValveLD = databaseHandler.getListValveLD();
+            ArrayList<JSONObject> listValveMD = databaseHandler.getListValveMD();
 
-            ArrayList<JSONObject> listValveSessionLD = databaseHandler.getListValveSessionLD();
+            ArrayList<JSONObject> listValveSessionMD = databaseHandler.getListValveSessionMD();
 
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             if (user != null) {
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                /*FirebaseDatabase database = FirebaseDatabase.getInstance();
                 DatabaseReference myRef = database.getReference("User");
-                //myRef.child(user.getUid()).child("Device").setValue(deviceName);
-                myRef.child(user.getUid()).child("Device: " + deviceName).child("mac Id").setValue(deviceUID);
-                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").child("res_type").setValue("LD");
-                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").push().child("devices").setValue(listDeviceLD.toString());
-                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").push().child("devices_valves_master").setValue(listValveLD.toString());
-                myRef.child(user.getUid()).child("Device: " + deviceName).child("Valve data").push().child("devices_valves_session").setValue(listValveSessionLD.toString())
+               // myRef.child(user.getUid()).child("Device").child("Device name").push().setValue(deviceName);
+                myRef.child(user.getUid()).child("Device").child(deviceName);
+                myRef.child(user.getUid()).child("Device").child(deviceName).child("mac ID").setValue(macAdd);
+                myRef.child(user.getUid()).child("Device").child(deviceName).child(clkdVlvName);
+                myRef.child(user.getUid()).child("Device").child(deviceName).child(clkdVlvName).child("res_type").setValue("LD");
+                myRef.child(user.getUid()).child("Device").child(deviceName).child(clkdVlvName).push().child("devices").setValue(listDeviceMD.toString());
+                myRef.child(user.getUid()).child("Device").child(deviceName).child(clkdVlvName).push().child("devices_valves_master").setValue(listValveMD.toString());
+                myRef.child(user.getUid()).child("Device").child(deviceName).child(clkdVlvName).push().child("devices_valves_session").setValue(listValveSessionMD.toString())*/
+
+                Calendar c = Calendar.getInstance();
+                System.out.println("Current time => "+c.getTime());
+
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String formattedDate = df.format(c.getTime());
+
+                // Access a Cloud Firestore instance from your Activity
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                // Create a new user with a first and last name
+                Map<String, Object> Usr = new HashMap<>();
+                Usr.put("Device", deviceName);
+                Usr.put("mac Id", macAdd);
+
+                Map<String, Object> plan = new HashMap<>();
+                plan.put("Valve", clkdVlvName);
+                plan.put("devices",listDeviceMD.toString());
+                plan.put("devices_valves_master",listValveMD.toString());
+                plan.put("devices_valves_session",listValveSessionMD.toString());
+
+                // Add a new document with a generated ID
+                db.collection("users").document("Device details")
+                        .set(Usr)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
+
                                 // Write was successful!
                                 Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
 
@@ -1883,6 +1915,7 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
                                 databaseHandler.deleteAllLogsTableData();
 
                             }
+
                         })
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
@@ -1892,6 +1925,9 @@ public class FragAddEditSesnPlan extends Fragment implements View.OnClickListene
                                 // ...
                             }
                         });
+
+                db.collection("users").document("Device details").collection(clkdVlvName).document(formattedDate)
+                        .set(plan, SetOptions.merge());
             }
 
         }

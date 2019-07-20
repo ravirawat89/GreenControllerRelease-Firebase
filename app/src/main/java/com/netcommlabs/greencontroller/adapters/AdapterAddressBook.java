@@ -101,12 +101,15 @@ public class AdapterAddressBook extends RecyclerView.Adapter<AdapterAddressBook.
             public void onClick(View v) {
                 if (fragment instanceof FragConnectedQR) {
                     String selectedAddressID = listModalAddressModule.get(position).getAddressUUID();
+                    String radioName = listModalAddressModule.get(position).getAddressRadioName();
+                    Intent in = new Intent();
+                    in.putExtra("KEY_selected_Address_ID", selectedAddressID);
+                    in.putExtra("KEY_radio_name", radioName);
                     //((FragAddressBook) mContext).addressBookChosen(selectedAddressID);
                     fragAddressBook.getTargetFragment().onActivityResult(
                             fragAddressBook.getTargetRequestCode(),
-                            RESULT_OK,
-                            new Intent().putExtra("KEY_selected_Address_ID", selectedAddressID)
-                    );
+                            RESULT_OK, in);                                                //new Intent().putExtra("KEY_selected_Address_ID", selectedAddressID);
+
                     mContext.onBackPressed();
                 } else {
                     FragAddressDetail fragAddressDetail = new FragAddressDetail();

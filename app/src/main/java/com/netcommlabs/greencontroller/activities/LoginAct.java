@@ -33,6 +33,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
@@ -51,6 +52,9 @@ import com.netcommlabs.greencontroller.utilities.NetworkUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.netcommlabs.greencontroller.activities.ActvityCheckRegisteredMobileNo.LANDED_FROM;
@@ -251,8 +255,8 @@ public class LoginAct extends AppCompatActivity implements View.OnClickListener,
                                 FirebaseDatabase database = FirebaseDatabase.getInstance();
                                 DatabaseReference myRef = database.getReference("User");
                                 myRef.child(user.getUid()).child("username").setValue(name);
-                                myRef.child(user.getUid()).child("email Id").setValue(email)
-                                //myRef.child(user.getUid()).child("Phone").setValue(phoneNumber)
+                                myRef.child(user.getUid()).child("email Id").setValue(email);
+                                myRef.child(user.getUid()).child("Phone").setValue(phoneNumber)
                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                             @Override
                                             public void onSuccess(Void aVoid) {
@@ -269,12 +273,14 @@ public class LoginAct extends AppCompatActivity implements View.OnClickListener,
                                                 // ...
                                             }
                                         });
-                               }
+
+
+                            }
                             //myRef.push().child("Username").setValue(name);
                             //myRef.push().child("Email").setValue(email);
                             //myRef.push().child("Phone mumber").setValue(phoneNumber);
                             //************************************ Firebase: Start main Activity after successfull Google sign in*****************************
-                            /*MySharedPreference.getInstance(LoginAct.this).setMOBILE(phoneNumber);
+                            /*MySharedPreference.getInstance(LoginAct.this).setMOBILE("9711209087");
                             Intent intent = new Intent(LoginAct.this, MainActivity.class);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             startActivity(intent);*/

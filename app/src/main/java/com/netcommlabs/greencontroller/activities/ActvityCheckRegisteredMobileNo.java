@@ -24,6 +24,7 @@ import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
@@ -34,6 +35,8 @@ import com.netcommlabs.greencontroller.utilities.MySharedPreference;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.netcommlabs.greencontroller.activities.ActvityOtp.KEY_LANDED_FROM;
@@ -91,7 +94,7 @@ public class ActvityCheckRegisteredMobileNo extends Activity implements View.OnC
             Log.d("Phone verification", "onVerificationCompleted:" + credential);
             Toast.makeText(ActvityCheckRegisteredMobileNo.this, "Phone number verified successfully \n" + credential, Toast.LENGTH_SHORT).show();
 
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();        // check user signed in
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();        // check user signed in status
             name = user.getDisplayName();
             email = user.getEmail();
             final String uid = user.getUid();
@@ -122,7 +125,38 @@ public class ActvityCheckRegisteredMobileNo extends Activity implements View.OnC
                         }
                     });
 
-            progressPhone.setVisibility(View.GONE);
+            // Access a Cloud Firestore instance from your Activity
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            // Create a new user with a first and last name
+            Map<String, Object> Usr = new HashMap<>();
+            Usr.put("Username", name);
+            Usr.put("Email Id", email);
+            Usr.put("mobile no.", et_mobile_no.getText().toString().trim());
+            Usr.put("user uid", uid);
+
+            // Add a new document with a generated ID
+            db.collection(email).document("Profile details")
+                    .set(Usr)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid)
+                        {
+                            // Write was successful!
+                            Toast.makeText(ActvityCheckRegisteredMobileNo.this, "write successful.", Toast.LENGTH_SHORT).show();
+                        }
+
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Write failed
+                            Toast.makeText(ActvityCheckRegisteredMobileNo.this, "write failed!!", Toast.LENGTH_SHORT).show();
+                            // ...
+                        }
+                    });
+
+            progressPhone.setVisibility(View.GONE);      // stop progress bar
+
             //************************************ Firebase: Start main Activity after successfull Google sign in*****************************
             Intent intent = new Intent(ActvityCheckRegisteredMobileNo.this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

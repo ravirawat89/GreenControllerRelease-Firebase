@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
@@ -40,7 +41,12 @@ import com.netcommlabs.greencontroller.utilities.NetworkUtils;
 
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -71,6 +77,7 @@ public class FragConnectedQR extends Fragment implements APIResponseListener {
     private LinearLayout address_selection_layout;
     private List<ModalAddressModule> listMdalAddressModules;
     private String selectedExistingAddressID = "";
+    private String radioName;
 
     @Override
     public void onAttach(Context context) {
@@ -270,11 +277,15 @@ public class FragConnectedQR extends Fragment implements APIResponseListener {
                     long insertedRowID = databaseHandler.insertDeviceModule(selectedExistingAddressID, dvcNameEdited, dvc_mac_address, qrCodeEdited, valveNum);
                     if (insertedRowID != -1) {
                         databaseHandler.insertDeviceModuleLog(databaseHandler.insertedDvcUUID);
+
+                        saveDeviceDetails(dvcNameEdited);           //Save device details to firestore
                         //Replacing current Fragment by (FragDeviceMAP)
                         MyFragmentTransactions.replaceFragment(mContext, new FragDeviceMAP(), TagConstant.DEVICE_MAP, mContext.frm_lyt_container_int, false);
                         dvcNameEdited = "";
                         qrCodeEdited = "";
                         Toast.makeText(mContext, "Device and Address now registered with app", Toast.LENGTH_LONG).show();
+
+                       // hitApiForSaveAddress();  //save address and device details to firestore
                     }
                 } else {
                    hitApiForSaveAddress();
@@ -290,34 +301,78 @@ public class FragConnectedQR extends Fragment implements APIResponseListener {
         });
     }
 
+    private void saveDeviceDetails(String dvc_Name)         // Save device registration details in firestore database when first time connected
+    {
+        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null)
+        {
+            //**********Store data in Firestore*********************************************//
+            // Access a Cloud Firestore instance from your Activity
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            Calendar c = Calendar.getInstance();
+            System.out.println("Current time => " + c.getTime());
+
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedDate = df.format(c.getTime());
+
+            Map<String, Object> usr_dvc = new HashMap<>();
+            usr_dvc.put("Device", dvc_Name);
+            usr_dvc.put("mac Id", dvc_mac_address);
+            if (device_name.equals("Pebble"))
+                usr_dvc.put("device type", "MVC");
+            else
+                usr_dvc.put("device type", "Tubby");
+            usr_dvc.put("Address(tag)", radioName);
+            usr_dvc.put("created on", formattedDate);
+            db.collection(user.getEmail()).document("User devices").collection(dvc_Name).document("Registration details")
+                    .set(usr_dvc);
+        }
+    }
+
     private void hitApiForSaveAddress() {
 
         ////************************************ Firebase add address first time***************************************************************************************//
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if(user != null)
-        {
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            DatabaseReference myRef = database.getReference("User");
-            myRef.child(user.getUid()).child("Device").setValue(device_name);
-            myRef.child(user.getUid()).child("mac Id").setValue(dvc_mac_address);
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("address_name").setValue(modalAddressModule.getAddressRadioName());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("flat_house_building").setValue(modalAddressModule.getFlat_num());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("tower_street").setValue(modalAddressModule.getStreetName());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("area_land_loca").setValue( modalAddressModule.getLocality_landmark());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("pin_code").setValue( modalAddressModule.getPinCode());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("city").setValue(modalAddressModule.getCity());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("state").setValue(modalAddressModule.getState());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_lat").setValue(modalAddressModule.getLatitudeLocation());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_longi").setValue(modalAddressModule.getLongitudeLocation());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_well_known_name").setValue(modalAddressModule.getPlaceWellKnownName());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_Address").setValue(modalAddressModule.getPlaceAddress())
+        if(user != null) {
+
+            //***************************************************************************************************************************************************************
+        /*try {
+            request = new ProjectWebRequest(mContext, getParam(), UrlConstants.ADD_ADDRESS, this, UrlConstants.ADD_ADDRESS_TAG);
+            request.execute();
+        } catch (Exception e) {
+            clearRef();
+            e.printStackTrace();
+        }*/
+            saveDeviceDetails(dvcNameEdited);
+
+            //**********Store data in Firestore*********************************************//
+            // Access a Cloud Firestore instance from your Activity
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            // Create a new user with a first and last name
+            Map<String, Object> Usr = new HashMap<>();
+            Usr.put("address_name", modalAddressModule.getAddressRadioName());
+            Usr.put("flat_house_building", modalAddressModule.getFlat_num());
+            Usr.put("tower_street", modalAddressModule.getStreetName());
+            Usr.put("area_land_loca", modalAddressModule.getLocality_landmark());
+            Usr.put("pin_code", modalAddressModule.getPinCode());
+            Usr.put("city", modalAddressModule.getCity());
+            Usr.put("state", modalAddressModule.getState());
+            Usr.put("place_lat", modalAddressModule.getLatitudeLocation());
+            Usr.put("place_longi", modalAddressModule.getLongitudeLocation());
+            Usr.put("place_well_known_name", modalAddressModule.getPlaceWellKnownName());
+            Usr.put("place_Address", modalAddressModule.getPlaceAddress());
+            // Add a new document with a generated ID
+            db.collection(user.getEmail()).document("User address").collection("Address type").document(modalAddressModule.getAddressRadioName())
+                    .set(Usr)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
                             // Write was successful!
                             Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
-                            // ...
-                            long insertedAddressUniqueID = databaseHandler.insertAddressModule(user.getUid(), modalAddressModule);
+
+                            //***********Move to next fragment FragDeviceMAP***************************
+
+                            long insertedAddressUniqueID = databaseHandler.insertAddressModule(user.getUid(), modalAddressModule);        //change to user.getUid()
                             if (insertedAddressUniqueID != 0) {
                                 long insertedRowID = databaseHandler.insertDeviceModule(databaseHandler.getAddressUUID(), dvcNameEdited, dvc_mac_address, qrCodeEdited, valveNum);
                                 if (insertedRowID != -1) {
@@ -330,8 +385,8 @@ public class FragConnectedQR extends Fragment implements APIResponseListener {
 
                                 }
                             }
-
                         }
+
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
@@ -341,16 +396,8 @@ public class FragConnectedQR extends Fragment implements APIResponseListener {
                             // ...
                         }
                     });
-        }
 
-        //***************************************************************************************************************************************************************
-        /*try {
-            request = new ProjectWebRequest(mContext, getParam(), UrlConstants.ADD_ADDRESS, this, UrlConstants.ADD_ADDRESS_TAG);
-            request.execute();
-        } catch (Exception e) {
-            clearRef();
-            e.printStackTrace();
-        }*/
+        }
 
     }
 
@@ -392,6 +439,7 @@ public class FragConnectedQR extends Fragment implements APIResponseListener {
         if (requestCode == REQUEST_CODE_FOR_ADDRESS_BOOK && resultCode == RESULT_OK) {
             if (data.getStringExtra("KEY_selected_Address_ID") != null) {
                 selectedExistingAddressID = data.getStringExtra("KEY_selected_Address_ID");
+                radioName = data.getStringExtra("KEY_radio_name");
                 Toast.makeText(mContext, "Existing address selected", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(mContext, "Selected address not copied, try again", Toast.LENGTH_SHORT).show();
@@ -456,6 +504,10 @@ public class FragConnectedQR extends Fragment implements APIResponseListener {
             hitApiForSaveAddress();
         }
 
+    }
+
+    private String generateUUID() {
+        return UUID.randomUUID().toString();
     }
 
     /* @Override

@@ -41,6 +41,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Interfaces.APIResponseListener;
 import com.netcommlabs.greencontroller.R;
@@ -58,7 +59,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
@@ -112,6 +116,7 @@ public class FragAddEditAddress extends Fragment implements OnMapReadyCallback, 
     private String strValue;
     private String addAddressId;
     private String strValueInstanceLevel;
+    private String checkRadioName;
 
     @Override
 
@@ -315,7 +320,7 @@ public class FragAddEditAddress extends Fragment implements OnMapReadyCallback, 
             if (resultCode == RESULT_OK) {
                 place = PlaceAutocomplete.getPlace(mContext, data);
                 placeLatLong = place.getLatLng();
-                placeWellKnownName = place.getName().toString();
+                placeWellKnownName = place.getName().toString();         // Get type of Address from radio button i.e "Home" or "Office"
                 placeAddress = place.getAddress().toString();
                 Log.e("@@@ PLACE WITH PAC", placeLatLong + "\n" + placeWellKnownName + "\n" + placeAddress);
                 latlongShowOnGoogleMap();
@@ -481,15 +486,40 @@ public class FragAddEditAddress extends Fragment implements OnMapReadyCallback, 
                     for (int i = 0; i < databaseHandler.getAlladdressUUIDRadioNameSelectStatus().size(); i++) {
                         if (databaseHandler.getAlladdressUUIDRadioNameSelectStatus().get(i).getAddressRadioName().equalsIgnoreCase(radioAddressName)) {
                             Toast.makeText(mContext, "\"" + radioAddressName + "\" already exists with app, Choose different Address Name", Toast.LENGTH_LONG).show();
-                            return;
+                            return;        // "return removed to test existing address type from array list"
                         }
                     }
                 }
-                if (etCityInput.equals(savedCity)) {
-                    latlongShowOnGoogleMap();
-                } else {
-                    getLatLongFromAddress(etCityInput);
+    //********************************correction Code to avoid screen shift to google maps again when user enter all address details and also selected location on Map************************************************
+                if(modalAddressModule != null && (!landedHereFrom.equals("FragAddressDetail")))
+                {
+                    if (landedHereFrom.equals("FragAddressDetail"))     // check if user wants to edit existing address and update it in local database
+                    {
+                        databaseHandler.updateAddressModule(modalAddressModule);
+                    }
+                    else                                               // user wants to add new address in address book so insert address in database
+                    {
+                        databaseHandler.insertAddressModule(generateUUID(), modalAddressModule);        //generateUUID() user.getUid()
+                       //
+                     }
+
+                    mContext.rlHamburgerNdFamily.setVisibility(View.VISIBLE);
+                    llSearchMAPok.setVisibility(View.GONE);
+                    mContext.llSearchMapOKTop.setVisibility(View.GONE);
+
+                    mContext.onBackPressed();           //move to previous screen
+
+
                 }
+   //*************************************************************************************************************************************************************
+                else {  // Code to call google maps api if modalAddressModule is empty i.e user entered address details first time and need address map location
+                    if (etCityInput.equals(savedCity)) {
+                        latlongShowOnGoogleMap();
+                    } else {
+                        getLatLongFromAddress(etCityInput);
+                    }
+                }
+
                 break;
             case R.id.btnAddressDone:
                 if (etSearchPlaceAuto.getText().toString().isEmpty()) {
@@ -550,7 +580,7 @@ public class FragAddEditAddress extends Fragment implements OnMapReadyCallback, 
 
     }
 
-    private void hitApiForSaveAddress(String strValue) {
+    private void hitApiForSaveAddress(String strValue) {          // Save or update address to firestore database
         /*try {
             strValueInstanceLevel = strValue;
             request = new ProjectWebRequest(mContext, getParam(strValue), UrlConstants.ADD_ADDRESS, this, UrlConstants.ADD_ADDRESS_TAG);
@@ -559,45 +589,87 @@ public class FragAddEditAddress extends Fragment implements OnMapReadyCallback, 
             clearRef();
             e.printStackTrace();
         }*/
-        if(strValue.equals("edit"))
-        {
-            databaseHandler.updateAddressModule(modalAddressModule);
-        }
-        //************************************ Firebase update address***************************************************************************************//
+        strValueInstanceLevel = strValue;
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if(user != null)
-        {
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            DatabaseReference myRef = database.getReference("User");
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("address_name").setValue(modalAddressModule.getAddressRadioName());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("flat_house_building").setValue(modalAddressModule.getFlat_num());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("tower_street").setValue(modalAddressModule.getStreetName());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("area_land_loca").setValue( modalAddressModule.getLocality_landmark());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("pin_code").setValue( modalAddressModule.getPinCode());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("city").setValue(modalAddressModule.getCity());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("state").setValue(modalAddressModule.getState());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_lat").setValue(modalAddressModule.getLatitudeLocation());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_longi").setValue(modalAddressModule.getLongitudeLocation());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_well_known_name").setValue(modalAddressModule.getPlaceWellKnownName());
-            myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_Address").setValue(modalAddressModule.getPlaceAddress())
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            // Write was successful!
-                            Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
-                            // ...
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            // Write failed
-                            Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
-                            // ...
-                        }
-                    });
-            mContext.onBackPressed();
-        }
+        databaseHandler.updateAddressModule(modalAddressModule);
+            //************************************ Firebase update address***************************************************************************************//
+
+            if(user != null)
+            {
+                /*FirebaseDatabase database = FirebaseDatabase.getInstance();
+                DatabaseReference myRef = database.getReference("User");
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("address_name").setValue(modalAddressModule.getAddressRadioName());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("flat_house_building").setValue(modalAddressModule.getFlat_num());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("tower_street").setValue(modalAddressModule.getStreetName());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("area_land_loca").setValue(modalAddressModule.getLocality_landmark());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("pin_code").setValue(modalAddressModule.getPinCode());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("city").setValue(modalAddressModule.getCity());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("state").setValue(modalAddressModule.getState());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_lat").setValue(modalAddressModule.getLatitudeLocation());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_longi").setValue(modalAddressModule.getLongitudeLocation());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_well_known_name").setValue(modalAddressModule.getPlaceWellKnownName());
+                myRef.child(user.getUid()).child("User Address").child(modalAddressModule.getAddressUUID()).child("place_Address").setValue(modalAddressModule.getPlaceAddress())
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                // Write was successful!
+                                Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                                // ...
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Write failed
+                                Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                                // ...
+                            }
+                        });*/
+
+                //**********Store data in Firestore*********************************************//
+                // Access a Cloud Firestore instance from your Activity
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                // Create a new user with a first and last name
+                Map<String, Object> Usr = new HashMap<>();
+                Usr.put("address_name", modalAddressModule.getAddressRadioName());
+                Usr.put("flat_house_building", modalAddressModule.getFlat_num());
+                Usr.put("tower_street", modalAddressModule.getStreetName());
+                Usr.put("area_land_loca", modalAddressModule.getLocality_landmark());
+                Usr.put("pin_code", modalAddressModule.getPinCode());
+                Usr.put("city", modalAddressModule.getCity());
+                Usr.put("state", modalAddressModule.getState());
+                Usr.put("place_lat", modalAddressModule.getLatitudeLocation());
+                Usr.put("place_longi", modalAddressModule.getLongitudeLocation());
+                Usr.put("place_well_known_name", modalAddressModule.getPlaceWellKnownName());
+                Usr.put("place_Address", modalAddressModule.getPlaceAddress());
+                // Add a new document with a generated ID
+                db.collection(user.getEmail()).document("User address").collection("Address type").document(modalAddressModule.getAddressRadioName())
+                        .set(Usr)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                // Write was successful!
+                                Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Write failed
+                                Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                                // ...
+                            }
+                        });
+            }
+
+          if (strValueInstanceLevel.equals("add")) {
+                //databaseHandler.insertAddressModule(user.getUid(), modalAddressModule);        //generateUUID()
+            } else if (strValueInstanceLevel.equals("edit")) {
+                //databaseHandler.updateAddressModule(modalAddressModule);
+
+                mContext.onBackPressed();
+            }
+
     }
 
     private JSONObject getParam(String strValue) {
@@ -628,54 +700,22 @@ public class FragAddEditAddress extends Fragment implements OnMapReadyCallback, 
     @Override
     public void onSuccess(JSONObject call, int Tag) {
         if (Tag == UrlConstants.ADD_ADDRESS_TAG) {
-            if (strValueInstanceLevel.equals("add")) {
+
+            /*if (strValueInstanceLevel.equals("add")) {
                 databaseHandler.insertAddressModule(call.optString("address_id"), modalAddressModule);
             } else if (strValueInstanceLevel.equals("edit")) {
                 databaseHandler.updateAddressModule(modalAddressModule);
 
-//************************************ Firebase update address***************************************************************************************//
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if(user != null)
-                {
-                    FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    DatabaseReference myRef = database.getReference("User");
-                    myRef.child(user.getUid()).child("User Address").child("address_name").setValue(modalAddressModule.getAddressRadioName());
-                    myRef.child(user.getUid()).child("User Address").child("flat_house_building").setValue(modalAddressModule.getFlat_num());
-                    myRef.child(user.getUid()).child("User Address").child("tower_street").setValue(modalAddressModule.getStreetName());
-                    myRef.child(user.getUid()).child("User Address").child("area_land_loca").setValue( modalAddressModule.getLocality_landmark());
-                    myRef.child(user.getUid()).child("User Address").child("pin_code").setValue( modalAddressModule.getPinCode());
-                    myRef.child(user.getUid()).child("User Address").child("city").setValue(modalAddressModule.getCity());
-                    myRef.child(user.getUid()).child("User Address").child("state").setValue(modalAddressModule.getState());
-                    myRef.child(user.getUid()).child("User Address").child("place_lat").setValue(modalAddressModule.getLatitudeLocation());
-                    myRef.child(user.getUid()).child("User Address").child("place_longi").setValue(modalAddressModule.getLongitudeLocation());
-                    myRef.child(user.getUid()).child("User Address").child("place_well_known_name").setValue(modalAddressModule.getPlaceWellKnownName());
-                    myRef.child(user.getUid()).child("User Address").child("place_Address").setValue(modalAddressModule.getPlaceAddress())
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    // Write was successful!
-                                    Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
-                                    // ...
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    // Write failed
-                                    Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
-                                    // ...
-                                }
-                            });
-                }
-            }
-//*********************************************************************************************************************************************************
-            //addAddressId=call.optString("address_id");
+
+                //addAddressId=call.optString("address_id");
             /*ModalAddressModule model = new Gson().fromJson(call.toString(), ModalAddressModule.class);
             MySharedPreference.getInstance(mContext).setADDRESSID(model);*/
-            //  MySharedPreference.getInstance(mContext).setADDRESSID(call.optString("address_id"));
+                //  MySharedPreference.getInstance(mContext).setADDRESSID(call.optString("address_id"));
 
-            Toast.makeText(mContext, "" + call.optString("message"), Toast.LENGTH_SHORT).show();
-            mContext.onBackPressed();
+               /* Toast.makeText(mContext, "" + call.optString("message"), Toast.LENGTH_SHORT).show();
+                mContext.onBackPressed();
+            }*/
+
         }
 
     }
@@ -707,6 +747,10 @@ public class FragAddEditAddress extends Fragment implements OnMapReadyCallback, 
         if (mapFragment != null) {
             mContext.getFragmentManager().beginTransaction().remove(mapFragment).commit();
         }
+    }
+
+    private String generateUUID() {
+        return UUID.randomUUID().toString();
     }
 /*
     @Override

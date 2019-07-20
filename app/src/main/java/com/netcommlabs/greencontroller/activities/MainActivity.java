@@ -57,8 +57,14 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.netcommlabs.greencontroller.Dialogs.AppAlertDialog;
 import com.netcommlabs.greencontroller.Dialogs.ErroScreenDialog;
 import com.netcommlabs.greencontroller.Fragments.FragAddEditAddress;
@@ -89,10 +95,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static com.netcommlabs.greencontroller.activities.ActvityOtp.KEY_LANDED_FROM;
 import static com.netcommlabs.greencontroller.activities.ActvityOtp.KEY_MOBILE_NUM;
@@ -369,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 try {
                     object.put("imei_primary", imeiSIM1);
                     object.put("imei_secondary", imeiSIM2);
-                    if (addressUserFriendly == "") {
+                    if (addressUserFriendly.equals("")) {
                         object.put("location", "");
                     } else {
                         object.put("location", addressUserFriendly);
@@ -514,6 +524,31 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.v("IMEI STATUS\n", " IMEI-1 : " + imeiSIM1 + "\n" +
                 " IMEI-2 : " + imeiSIM2);
 
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference("User");
+            myRef.child(user.getUid()).child("imei_primary").setValue(imeiSIM1);
+            myRef.child(user.getUid()).child("imei_secondary").setValue(imeiSIM2)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            // Write was successful!
+                            Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                            // ...
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Write failed
+                            Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                            // ...
+                        }
+                    });
+
+        }
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
@@ -653,6 +688,50 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             e.printStackTrace();
         }
        // hitAPI(UrlConstants.SAVE_IMEI_TAG);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null)
+        {
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference("User");
+            myRef.child(user.getUid()).child("User location").setValue(addressUserFriendly);
+            Log.e("##USER LOCATION", addressUserFriendly);
+
+            //**********Store phone location data in Firestore*********************************************//
+            // Access a Cloud Firestore instance from your Activity
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            Calendar c = Calendar.getInstance();       // calculate location time
+            System.out.println("Current time => "+c.getTime());
+            SimpleDateFormat date_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedTime = date_time.format(c.getTime());
+
+            Map<String, Object> Usr = new HashMap<>();
+            Usr.put("Current location", addressUserFriendly);
+            Usr.put("IMEI primary", imeiSIM1);
+            Usr.put("IMEI secondary", imeiSIM2);
+            Usr.put("Time", formattedTime);
+
+            // Add a new document with a generated ID
+            db.collection(user.getEmail()).document("User location")
+                    .set(Usr)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            // Write was successful!
+                            Toast.makeText(mContext, "write successful.", Toast.LENGTH_SHORT).show();
+                        }
+
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Write failed
+                            Toast.makeText(mContext, "write failed!!", Toast.LENGTH_SHORT).show();
+                            // ...
+                        }
+                    });
+        }
+
     }
 
     @Override
@@ -864,13 +943,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
           //  hitAPI(UrlConstants.TAG_GREEN_MD_SEND);
 
     //**************************** Clear all log data when user click on logout button*********************************************************
-            databaseHandler.setOPtoZeroAllMDTables();
+            //databaseHandler.setOPtoZeroAllMDTables();    // Don't delete local database for Firebase
 
             greenDataSendLastLongDT = date.getTime();
             MySharedPreference.getInstance(mContext).setLastDataSendLognDT(greenDataSendLastLongDT);
             Log.e("@@@ SYNC LD STATUS ", "SUCCESS FROM MainActivity");
 
-            databaseHandler.deleteAllLogsTableData();
+            //databaseHandler.deleteAllLogsTableData();   // Don't delete local database for Firebase
             // If logout clicked it would be true
             if (isLogoutTrue) {
                 clearSPDeleteDBandLogout();
@@ -889,12 +968,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         {
             FirebaseAuth.getInstance().signOut();
         }
-        MySharedPreference.getInstance(mContext).clearAll();
-        databaseHandler.closeDB();
-        mContext.deleteDatabase(DatabaseHandler.DATABASE_NAME);
+        MySharedPreference.getInstance(mContext).setLogIndex(0);        // //Don't clear shared preferences for Firebase
+        //MySharedPreference.getInstance(mContext).clearAll();
+        //databaseHandler.closeDB();                                    //Don't close local database for Firebase
+       // mContext.deleteDatabase(DatabaseHandler.DATABASE_NAME);         // Don't delete local database for Firebase
         Toast.makeText(mContext, "Logout successfully", Toast.LENGTH_SHORT).show();
         mContext.startActivity(new Intent(mContext, LoginAct.class));
         Log.e("### LOGOUT ", "EVERYTHING DELETED");
         finish();
+    }
+
+    public String getDeviceLocation()                          // Save device location when device connected to app
+    {
+        return addressUserFriendly;
     }
 }

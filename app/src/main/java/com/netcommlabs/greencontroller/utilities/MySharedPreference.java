@@ -49,7 +49,7 @@ public class MySharedPreference {
     public void setStringData(String key, String value) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(key, value);
-        editor.commit();
+        editor.apply();
     }
 
     public String getStringData(String key) {
@@ -60,7 +60,7 @@ public class MySharedPreference {
     public void setBooleanData(String key, boolean value) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putBoolean(key, value);
-        editor.commit();
+        editor.apply();
     }
 
     public Boolean getBooleanData(String key) {
@@ -70,7 +70,7 @@ public class MySharedPreference {
     public void setConnectedDvcMacAdd(String macAdd) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(keySetMacAd, macAdd);
-        editor.commit();
+        editor.apply();
     }
 
     public String getConnectedDvcMacAdd() {
@@ -84,7 +84,7 @@ public class MySharedPreference {
     public void setLastConnectedTime(String lastConctdTime) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(keyConnectedTime, lastConctdTime);
-        editor.commit();
+        editor.apply();
     }
 
 
@@ -94,7 +94,7 @@ public class MySharedPreference {
         editor.putString(UID, data.getUser_id());
         editor.putString(EMAIL, data.getEmail());
         editor.putString(MOBILE, data.getMobile());
-        editor.commit();
+        editor.apply();
     }
 
 
@@ -115,7 +115,7 @@ public class MySharedPreference {
     public void setUser_img(String data) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(User_img, data);
-        editor.commit();
+        editor.apply();
     }
 
 
@@ -126,7 +126,7 @@ public class MySharedPreference {
     public void setMOBILE(String data) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(MOBILE, data);
-        editor.commit();
+        editor.apply();
     }
 
 
@@ -137,7 +137,7 @@ public class MySharedPreference {
     public void setADDRESSID(String data) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(ADDRESSID, data);
-        editor.commit();
+        editor.apply();
     }*/
 
 
@@ -151,18 +151,18 @@ public class MySharedPreference {
 
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(ADDRESSID, modalAddressModule.getAddressUUID());
-        editor.commit();
+        editor.apply();
     }
 
 
     public void clearAll() {
-        sharedpreferences.edit().clear().commit();
+        sharedpreferences.edit().clear().apply();
     }
 
     public void setDvcNameFromDvcDetails(String dvcName) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString(KEY_DVC_NAME, dvcName);
-        editor.commit();
+        editor.apply();
     }
 
     public String getDvcNameFromDvcDetails() {
@@ -172,7 +172,7 @@ public class MySharedPreference {
     public void setLastDataSendLognDT(long greenDataSendLastLongDT) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putLong(KEY_LAST_DATA_SEND_LONG_DT, greenDataSendLastLongDT);
-        editor.commit();
+        editor.apply();
     }
 
     public long getLastDataSendLognDT() {
@@ -182,7 +182,7 @@ public class MySharedPreference {
     public void setUserName(String data) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString("UserName", data);
-        editor.commit();
+        editor.apply();
     }
 
     public String getUserName() {
@@ -192,10 +192,21 @@ public class MySharedPreference {
     public void setUserEmail(String data) {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putString("UserEmail", data);
-        editor.commit();
+        editor.apply();
     }
 
     public String getUserEmail() {
         return sharedpreferences.getString("UserEmail", "");
+    }
+
+    public void setLogIndex(int value)
+    {
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putInt("LogReadIndex",value);
+        editor.apply();
+    }
+
+    public int getLogIndex(){
+        return sharedpreferences.getInt("LogReadIndex",0);
     }
 }
